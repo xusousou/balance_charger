@@ -72,13 +72,13 @@ void StartTask(void const * pvParameters)
 
     for( ;; ){ 
         vTaskDelay(100);
-//LED_Control(0x00ffff);
-//        vTaskDelay(100);
-//LED_Control(0x00ff00);
-//        vTaskDelay(100);
-//LED_Control(0xff0000);
-//        vTaskDelay(100);
-//LED_Control(0x0000ff);
+LED_Control(0x00ffff);
+        vTaskDelay(100);
+LED_Control(0x00ff00);
+        vTaskDelay(100);
+LED_Control(0xff0000);
+        vTaskDelay(100);
+LED_Control(0x0000ff);
         Charge_RGB_Control(valueBAT,cell);
         vTaskDelay(100);
     }
