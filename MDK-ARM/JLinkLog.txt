@@ -1,0 +1,75 @@
+﻿T4D08 000:004.675   SEGGER J-Link V6.86 Log File
+T4D08 000:004.769   DLL Compiled: Sep 24 2020 17:31:31
+T4D08 000:004.785   Logging started @ 2021-07-27 08:40
+T4D08 000:004.802 - 4.810ms
+T4D08 000:004.823 JLINK_SetWarnOutHandler(...)
+T4D08 000:004.840 - 0.024ms
+T4D08 000:004.857 JLINK_OpenEx(...)
+T4D08 000:007.145   Firmware: J-Link ARM V8 compiled Nov 28 2014 13:44:46
+T4D08 000:011.956   Hardware: V8.00
+T4D08 000:012.012   S/N: 522133299
+T4D08 000:012.038   OEM: SEGGER
+T4D08 000:012.065   Feature(s): RDI,FlashDL,FlashBP,JFlash,GDBFULL
+T4D08 000:014.763   TELNET listener socket opened on port 19021
+T4D08 000:014.874   WEBSRV Starting webserver
+T4D08 000:015.011   WEBSRV Webserver running on local port 19080
+T4D08 000:015.040 - 10.192ms returns "O.K."
+T4D08 000:015.066 JLINK_GetEmuCaps()
+T4D08 000:015.085 - 0.027ms returns 0xB9FF7BBF
+T4D08 000:015.108 JLINK_TIF_GetAvailable(...)
+T4D08 000:015.573 - 0.476ms
+T4D08 000:015.598 JLINK_SetErrorOutHandler(...)
+T4D08 000:015.616 - 0.026ms
+T4D08 000:015.654 JLINK_ExecCommand("ProjectFile = "E:\学习资料\软件\GD32\GD32E23x_Demo_Suites_V1.0.1\GD32E230K_START_Demo_Suites\Projects\01_GPIO_Running_LED\MDK-ARM\JLinkSettings.ini"", ...). 
+T4D08 000:026.041   Device "CORTEX-M23" selected.
+T4D08 000:026.451 - 10.812ms returns 0x00
+T4D08 000:028.453 JLINK_ExecCommand("Device = GD32E230K6", ...). 
+T4D08 000:032.099   Device "CORTEX-M23" selected.
+T4D08 000:032.587 - 4.110ms returns 0x00
+T4D08 000:032.625 JLINK_GetHardwareVersion()
+T4D08 000:032.643 - 0.027ms returns 80000
+T4D08 000:032.673 JLINK_GetDLLVersion()
+T4D08 000:032.690 - 0.026ms returns 68600
+T4D08 000:032.709 JLINK_GetOEMString(...)
+T4D08 000:032.728 JLINK_GetFirmwareString(...)
+T4D08 000:032.746 - 0.027ms
+T4D08 000:038.709 JLINK_GetDLLVersion()
+T4D08 000:038.761 - 0.061ms returns 68600
+T4D08 000:038.781 JLINK_GetCompileDateTime()
+T4D08 000:038.798 - 0.026ms
+T4D08 000:040.360 JLINK_GetFirmwareString(...)
+T4D08 000:040.395 - 0.043ms
+T4D08 000:041.637 JLINK_GetHardwareVersion()
+T4D08 000:041.667 - 0.039ms returns 80000
+T4D08 000:042.892 JLINK_GetSN()
+T4D08 000:042.921 - 0.038ms returns 522133299
+T4D08 000:044.369 JLINK_GetOEMString(...)
+T4D08 000:047.404 JLINK_TIF_Select(JLINKARM_TIF_SWD)
+T4D08 000:049.015 - 1.656ms returns 0x00
+T4D08 000:049.074 JLINK_HasError()
+T4D08 000:049.103 JLINK_SetSpeed(1000)
+T4D08 000:049.455 - 0.362ms
+T4D08 000:049.477 JLINK_GetId()
+T4D08 000:053.200   Found SW-DP with ID 0x0BF11477
+T4D08 000:059.503   Old FW that does not support reading DPIDR via DAP jobs
+T4D08 000:069.313   Unknown DP version. Assuming DPv0
+T4D08 000:070.772   Scanning AP map to find all available APs
+T4D08 000:078.351   AP[1]: Stopped AP scan as end of AP map has been reached
+T4D08 000:080.171   AP[0]: AHB-AP (IDR: 0x04770025)
+T4D08 000:081.531   Iterating through AP map to find AHB-AP to use
+T4D08 000:092.198   AP[0]: Core found
+T4D08 000:093.786   AP[0]: AHB-AP ROM base: 0xE00FF000
+T4D08 000:100.118   CPUID register: 0x411CD200. Implementer code: 0x41 (ARM)
+T4D08 000:101.634   Found Cortex-M23 r1p0, Little endian.
+T4D08 000:204.118   -- Max. mem block: 0x00002408
+T4D08 000:205.309   Looking for J-Link GUI Server exe at: D:\Keil_v5\ARM\Segger\JLinkGUIServer.exe
+T4D08 000:205.433   Looking for J-Link GUI Server exe at: \JLinkGUIServer.exe
+T4D08 000:506.486   Failed to connect to J-Link GUI Server.
+T4D08 009:086.360   
+  ***** Error: 
+T4D08 009:086.418   Specific core setup failed.
+T4D08 009:086.445 - 9036.977ms returns 0x00000000
+T4D08 011:188.346 JLINK_Close()
+T4D08 011:208.081 - 19.778ms
+T4D08 011:208.134   
+T4D08 011:208.151   Closed
