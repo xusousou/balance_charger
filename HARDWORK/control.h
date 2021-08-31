@@ -25,4 +25,8 @@
 
 void balance_Init(void);
 
+void Balance_Battery();
+
+
+
 #endif

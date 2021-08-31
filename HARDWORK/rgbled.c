@@ -13,7 +13,6 @@ void rgbInit()
     rcu_periph_clock_enable(RCU_SPI0); 
 //    rcu_periph_clock_enable(RCU_DMA);
 
-    gpio_deinit(RGB_PORT);  
     gpio_af_set(RGB_PORT,GPIO_AF_0,RGB_PIN);
     gpio_mode_set(RGB_PORT,GPIO_MODE_AF,GPIO_PUPD_NONE,RGB_PIN);
     gpio_output_options_set(RGB_PORT,GPIO_OTYPE_PP,GPIO_OSPEED_50MHZ,RGB_PIN);

@@ -122,4 +122,5 @@ uint32_t Get_Max_Charge_Current(void);
 void Read_Charge_Status(void);
 //void Control_Charger_Output(uint8_t cell_Num,uint16_t cell_CUR,uint8_t cell_HI_Z);
 void Control_Charger_Output(float vol,uint8_t CELL);
+
 #endif

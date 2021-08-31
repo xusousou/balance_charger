@@ -1,16 +1,12 @@
 #include "adc.h"
 
 
+extern float valueBAT,value1S,value2S,value3S,value4S;
 
 struct Adc adc_values;
-
-float Cell_Voltage[5];
 uint16_t ADC_Value[5];
-float batdata[5];
-
-
+float adc_data[5];
 float vrefint, temperature;
-
 
 void adc_init(void)
 {
@@ -46,9 +42,8 @@ void adc_init(void)
 	adc_deinit                        ();                                              // 复位ADC外设。
 	adc_special_function_config       (ADC_SCAN_MODE, ENABLE);                         // 配置ADC扫描转换模式。
 	adc_special_function_config       (ADC_CONTINUOUS_MODE, ENABLE);                   // 配置ADC连续转换模式。
-//    adc_resolution_config(ADC_RESOLUTION_12B);
-//    adc_oversample_mode_config( ADC_OVERSAMPLING_ONE_CONVERT,ADC_OVERSAMPLING_SHIFT_NONE, ADC_OVERSAMPLING_RATIO_MUL16);
-	adc_external_trigger_source_config(ADC_REGULAR_CHANNEL, ADC_EXTTRIG_REGULAR_NONE); // 配置ADC外部触发源是软件触发。
+    adc_resolution_config(ADC_RESOLUTION_12B);
+    adc_oversample_mode_config( ADC_OVERSAMPLING_ALL_CONVERT,ADC_OVERSAMPLING_SHIFT_8B, ADC_OVERSAMPLING_RATIO_MUL256);
 	adc_data_alignment_config         (ADC_DATAALIGN_RIGHT);                           // 配置ADC数据对齐方式是右对齐。
 	adc_channel_length_config         (ADC_REGULAR_CHANNEL, 5);                        // 配置规则通道组或注入通道组的长度。因为要用到两个采样通道，所以是2.
 
@@ -58,17 +53,17 @@ void adc_init(void)
 	adc_regular_channel_config        (2, ADC_CHANNEL_2, ADC_SAMPLETIME_239POINT5);	
 	adc_regular_channel_config        (3, ADC_CHANNEL_16, ADC_SAMPLETIME_239POINT5);	
 	adc_regular_channel_config        (4, ADC_CHANNEL_17, ADC_SAMPLETIME_239POINT5);	
+    adc_oversample_mode_enable ();
+	adc_external_trigger_source_config(ADC_REGULAR_CHANNEL, ADC_EXTTRIG_REGULAR_NONE); // 配置ADC外部触发源是软件触发。
+    adc_external_trigger_config(ADC_REGULAR_CHANNEL,ENABLE);
 
 	adc_enable                        ();                                              // 使能ADC外设
-
-
-//    adc_oversample_mode_enable ();
-	adc_software_trigger_enable       (ADC_REGULAR_CHANNEL);                           // ADC软件触发使能。
-	/* 排除原因：延时。原以为是因为配置后没有给够时间，导致配置失败，但是在启动之前加了1s的延时仍然无法采集到数据。*/
-	adc_dma_mode_enable               ();                                              // ADCx DMA请求使能
+    delay_1ms(100);
 	adc_calibration_enable            ();                                              // ADC校准复位
-    /* 猜测原因：应该是在某种不清楚的条件下，将该函数设置的标志位进行的重置。暂且就调用两次，完成ADC+DMA的软件触发方式采集。*/
-	adc_software_trigger_enable       (ADC_REGULAR_CHANNEL);
+	adc_dma_mode_enable               ();                                              // ADCx DMA请求使能
+
+	adc_software_trigger_enable       (ADC_REGULAR_CHANNEL);                           // ADC软件触发使能。
+
 }
 
 uint8_t Get_Adc_Val( uint16_t *bat,uint16_t *s ,uint16_t *ss)
@@ -90,15 +85,14 @@ uint8_t Get_Adc_Val( uint16_t *bat,uint16_t *s ,uint16_t *ss)
     return 0;
 }
 
-
 uint8_t get_low_filter(uint16_t  *BAT,uint16_t *vol1, uint16_t *vol2)
 {
-    float dPower = 0.5; //
+    float dPower = 0.1; 
     static uint16_t  temperaturelastnum ,Vrefnum = 0,BATnum0 = 0,vol1num1 = 0,vol2num2 = 0;   
     static uint16_t  temperaturenum = 0,VrefLastnum,Lastnum0,Lastnum1,Lastnum2; //
     
-    temperaturenum = ((temperature/10) * dPower) + (1-dPower) * temperaturenum;
-    Vrefnum = ( vrefint/10 * dPower ) + ( 1 - dPower ) * VrefLastnum; //
+    temperaturenum = ((temperature) * dPower) + (1-dPower) * temperaturenum;
+    Vrefnum = ( vrefint * dPower ) + ( 1 - dPower ) * VrefLastnum; //
 
     BATnum0 = ( *BAT * dPower ) + ( 1 - dPower ) * Lastnum0; //
     vol1num1 = ( *vol1 * dPower ) + ( 1 - dPower ) * Lastnum1; //
@@ -115,19 +109,24 @@ uint8_t get_low_filter(uint16_t  *BAT,uint16_t *vol1, uint16_t *vol2)
 //    vref_cal = (float)(adcref_read((adcrefcal *) 0x1FFF75AA)); 
 //    VDDA_Volatge = (3.0*vref_cal)/VrefLastnum;   
     adc_values.vrefint=  4096 *1.2/VrefLastnum;
-    batdata[0] = Lastnum0;
-    batdata[1] = Lastnum1;
-    batdata[2] = Lastnum2;
-    batdata[3] = temperaturelastnum;
-    batdata[4] = adc_values.vrefint;
+    adc_data[0] = Lastnum0;
+    adc_data[1] = Lastnum1;
+    adc_data[2] = Lastnum2;
+    adc_data[3] = temperaturelastnum/10;
+    adc_data[4] = adc_values.vrefint/10;
     return 0;
+}
+
+uint32_t Get_Cell_Voltage(uint8_t cell_number) {
+	if (cell_number > 4) {
+		return UINT32_MAX;
+	}
+	return adc_values.cell_voltage[cell_number];
 }
 
 
 float Get_MCU_Temperature(){
-
-//temperature1 =(float)batdata[3] *3.3/4096;
-    adc_values.temperature = ((1.450- (batdata[3] *3.3/4096))/(4.3/1000))+25;
+    adc_values.temperature = ((1.450- (adc_data[3] *3.3/4096))/(4.3/1000))+25;
 	return adc_values.temperature;
 }
 
