@@ -6,12 +6,6 @@
 #define SDA_OUT() {GPIO_CTL(GPIOB)&=0X0FFFFFFF;GPIO_CTL(GPIOB)|=(uint32_t)3<<28;}
 
 
-static void delay_us(int us)
-{
-    softDelayUs(us);
-}
-
-
 //IIC起始信号
 void i2c_start(void)
 {

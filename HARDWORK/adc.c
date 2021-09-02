@@ -48,9 +48,9 @@ void adc_init(void)
 	adc_channel_length_config         (ADC_REGULAR_CHANNEL, 5);                        // 配置规则通道组或注入通道组的长度。因为要用到两个采样通道，所以是2.
 
     adc_tempsensor_vrefint_enable();
-	adc_regular_channel_config        (0, ADC_CHANNEL_0, ADC_SAMPLETIME_239POINT5);     // 配置ADC规则通道组。rank代表扫描顺序，channel要根据ADC通道与GPIO的映射关系表确定。
-	adc_regular_channel_config        (1, ADC_CHANNEL_1, ADC_SAMPLETIME_239POINT5);	
-	adc_regular_channel_config        (2, ADC_CHANNEL_2, ADC_SAMPLETIME_239POINT5);	
+	adc_regular_channel_config        (0, ADC_CHANNEL_0, ADC_SAMPLETIME_55POINT5);     // 配置ADC规则通道组。rank代表扫描顺序，channel要根据ADC通道与GPIO的映射关系表确定。
+	adc_regular_channel_config        (1, ADC_CHANNEL_1, ADC_SAMPLETIME_55POINT5);	
+	adc_regular_channel_config        (2, ADC_CHANNEL_2, ADC_SAMPLETIME_55POINT5);	
 	adc_regular_channel_config        (3, ADC_CHANNEL_16, ADC_SAMPLETIME_239POINT5);	
 	adc_regular_channel_config        (4, ADC_CHANNEL_17, ADC_SAMPLETIME_239POINT5);	
     adc_oversample_mode_enable ();
@@ -58,36 +58,40 @@ void adc_init(void)
     adc_external_trigger_config(ADC_REGULAR_CHANNEL,ENABLE);
 
 	adc_enable                        ();                                              // 使能ADC外设
-    delay_1ms(100);
 	adc_calibration_enable            ();                                              // ADC校准复位
 	adc_dma_mode_enable               ();                                              // ADCx DMA请求使能
-
 	adc_software_trigger_enable       (ADC_REGULAR_CHANNEL);                           // ADC软件触发使能。
 
 }
 
 uint8_t Get_Adc_Val( uint16_t *bat,uint16_t *s ,uint16_t *ss)
 {       
-    *s   =0;
-	*ss  =0;
-	*bat =0;
-    temperature=0;
-    vrefint = 0;
-	for(uint8_t i=0;i<10;)
-	{
-		*s   += ADC_Value[0];   
-		*ss  += ADC_Value[1];
-        *bat += ADC_Value[2];  
-        temperature += ADC_Value[3];
-        vrefint += ADC_Value[4];
-        i=i+1;
-    } 
+//    *s   =0;
+//	*ss  =0;
+//	*bat =0;
+//    temperature=0;
+//    vrefint = 0;
+//	for(uint8_t i=0;i<10;)
+//	{
+//		*s   += ADC_Value[0];   
+//		*ss  += ADC_Value[1];
+//        *bat += ADC_Value[2];  
+//        temperature += ADC_Value[3];
+//        vrefint += ADC_Value[4];
+
+//        i=i+1;
+//    } 
+		*s   = ADC_Value[0];   
+		*ss  = ADC_Value[1];
+        *bat = ADC_Value[2];  
+        temperature = ADC_Value[3];
+        vrefint = ADC_Value[4];
     return 0;
 }
 
 uint8_t get_low_filter(uint16_t  *BAT,uint16_t *vol1, uint16_t *vol2)
 {
-    float dPower = 0.1; 
+    float dPower = 0.5; 
     static uint16_t  temperaturelastnum ,Vrefnum = 0,BATnum0 = 0,vol1num1 = 0,vol2num2 = 0;   
     static uint16_t  temperaturenum = 0,VrefLastnum,Lastnum0,Lastnum1,Lastnum2; //
     
@@ -112,8 +116,8 @@ uint8_t get_low_filter(uint16_t  *BAT,uint16_t *vol1, uint16_t *vol2)
     adc_data[0] = Lastnum0;
     adc_data[1] = Lastnum1;
     adc_data[2] = Lastnum2;
-    adc_data[3] = temperaturelastnum/10;
-    adc_data[4] = adc_values.vrefint/10;
+    adc_data[3] = temperaturelastnum;
+    adc_data[4] = adc_values.vrefint;
     return 0;
 }
 
@@ -121,7 +125,7 @@ uint32_t Get_Cell_Voltage(uint8_t cell_number) {
 	if (cell_number > 4) {
 		return UINT32_MAX;
 	}
-	return adc_values.cell_voltage[cell_number];
+	return adc_values.cell_voltage[cell_number] * BATTERY_ADC_MULTIPLIER;
 }
 
 

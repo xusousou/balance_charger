@@ -48,5 +48,5 @@ void delay_1ms(uint32_t count);
 void softDelayUs(uint32_t us);
 /* delay decrement */
 void delay_decrement(void);
-
+void delay_us(int us);
 #endif /* SYS_TICK_H */

@@ -62,14 +62,14 @@ void Balance_Battery()
 {
 	if ( (battery_state.balance_port_connected == CONNECTED) && (Get_Error_State() == 0) ) {
 
-		uint32_t min_cell_voltage = Get_Cell_Voltage(0);
-		uint32_t max_cell_voltage = Get_Cell_Voltage(0);
-		for(int i = 1; i < battery_state.number_of_cells; i++) {
-			if (Get_Cell_Voltage(i)*BATTERY_ADC_MULTIPLIER  < min_cell_voltage) {
-				min_cell_voltage = Get_Cell_Voltage(i)*BATTERY_ADC_MULTIPLIER ;
+		uint32_t min_cell_voltage = Get_Cell_Voltage(1);
+		uint32_t max_cell_voltage = Get_Cell_Voltage(1);
+		for(int i = 2; i <= battery_state.number_of_cells; i++) {
+			if (Get_Cell_Voltage(i)  < min_cell_voltage) {
+				min_cell_voltage = Get_Cell_Voltage(i) ;
 			}
-			if (Get_Cell_Voltage(i)*BATTERY_ADC_MULTIPLIER  > max_cell_voltage) {
-				max_cell_voltage = Get_Cell_Voltage(i)*BATTERY_ADC_MULTIPLIER ;
+			if (Get_Cell_Voltage(i)  > max_cell_voltage) {
+				max_cell_voltage = Get_Cell_Voltage(i) ;
 			}
 		}
 
@@ -96,11 +96,11 @@ void Balance_Battery()
 		//Check each cell voltage. If XT60 is connected, then allow larger voltage differences that tighten as the battery voltage increases.
 		//If just the balance port is connected, then use the tightest balancing thresholds
 		//If a cell is over CELL_OVER_VOLTAGE_ENABLE_DISCHARGE, then the discharging resistor will turn on
-		for(int i = 0; i < battery_state.number_of_cells; i++) {
-			if ( (battery_state.balancing_enabled == 1) && ((Get_Cell_Voltage(i)*BATTERY_ADC_MULTIPLIER  - min_cell_voltage) >= ((float)CELL_BALANCING_HYSTERESIS_V * scalar))) {
+		for(int i = 1; i <= battery_state.number_of_cells; i++) {
+			if ( (battery_state.balancing_enabled == 1) && ((Get_Cell_Voltage(i)  - min_cell_voltage) >= ((float)CELL_BALANCING_HYSTERESIS_V * scalar))) {
 				battery_state.cell_balance_bitmask |= (1<<i);
 			}
-			else if (Get_Cell_Voltage(i)*BATTERY_ADC_MULTIPLIER  >= CELL_OVER_VOLTAGE_ENABLE_DISCHARGE) {
+			else if (Get_Cell_Voltage(i)  >= CELL_OVER_VOLTAGE_ENABLE_DISCHARGE) {
 				battery_state.cell_balance_bitmask |= (1<<i);
 			}
 			else {

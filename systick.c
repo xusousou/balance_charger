@@ -107,3 +107,7 @@ void softDelayUs(uint32_t us)
     while ((getSysTimeUs() - now) < us);
 }
 
+void delay_us(int us)
+{
+    softDelayUs(us);
+}

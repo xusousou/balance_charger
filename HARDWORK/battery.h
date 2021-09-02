@@ -42,8 +42,8 @@ struct Battery {
 #define MIN_4SBAT_VOLTAGE	    8.4000
 
 
-#define BATTERY_ADC_MULTIPLIER 		1000000
-#define VOLTAGE_CONNECTED_THRESHOLD			(uint32_t)( 0.1 * BATTERY_ADC_MULTIPLIER )
+#define BATTERY_ADC_MULTIPLIER 		10000000
+#define VOLTAGE_CONNECTED_THRESHOLD			(uint32_t)( 1.0 * BATTERY_ADC_MULTIPLIER )
 #define CELL_DELTA_V_ENABLE_BALANCING		(uint32_t)( 0.015 * BATTERY_ADC_MULTIPLIER )
 #define CELL_BALANCING_HYSTERESIS_V			(uint32_t)( 0.010 * BATTERY_ADC_MULTIPLIER )
 #define CELL_BALANCING_SCALAR_MAX			(uint8_t)25
@@ -63,11 +63,13 @@ uint8_t cell_Select(uint8_t num);
 void Balance_Connection_State(void);
 void Battery_Connection_State(void);
 void Read_Cell_Voltage(void);
-
 void Cell_Voltage_Safety_Check(void);
-
+void Balance_Battery(void);
 /**********************************************************************************************************/
 
+
+uint8_t Get_Balancing_State();
+uint8_t Get_Requires_Charging_State();
 uint8_t Get_Number_Of_Cells();
 uint8_t Get_XT_Connection_State();
 uint8_t Get_Balance_Connection_State();

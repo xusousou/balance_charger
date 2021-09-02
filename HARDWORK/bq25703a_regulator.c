@@ -17,6 +17,7 @@ void BQ25703A_init(void)
 
     gpio_output_options_set(EN_OTG_PORT,GPIO_OTYPE_PP,GPIO_OSPEED_50MHZ,EN_OTG_PIN);
     gpio_output_options_set(ILIM_HIZ_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, ILIM_HIZ_PIN);
+    gpio_input_bit_get(CHRG_OK_PORT,CHRG_OK_PIN);
 }
 
 
@@ -436,7 +437,7 @@ void Control_Charger_Output(float vol,uint8_t CELL)
     if((vol*1000)>vol_min && (vol*1000)<(vol_max-400) && cell_Num>1){
         cell_CUR = CUR_max;
     }else if((vol*1000)>(vol_max-400) && (vol*1000)<(vol_max-100)  && cell_Num>1){
-        cell_CUR = CUR_max*(1-(vol*1000)/vol_max)+CUR_min;
+        cell_CUR = CUR_max*(1-(vol*1000)/vol_max);
     }else if((vol*1000)>(vol_max-100) && (vol*1000)<vol_max  && cell_Num>1){
         cell_CUR= CUR_min;
     }else cell_CUR= 0;

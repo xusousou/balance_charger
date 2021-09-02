@@ -1,6 +1,6 @@
 #include "error.h"
 
-volatile uint32_t error_state;
+volatile uint32_t error_state = 0;
 
 /**
  * @brief Returns the error state

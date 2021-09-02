@@ -119,6 +119,15 @@ uint32_t Get_Input_Current_ADC_Reading(void);
 uint32_t Get_Charge_Current_ADC_Reading(void);
 uint32_t Get_Max_Charge_Current(void);
 
+void Regulator_HI_Z(uint8_t hi_z_en);
+void Regulator_OTG_EN(uint8_t otg_en);
+uint8_t Read_Charge_Okay(void);
+void Regulator_Read_ADC();
+
+uint8_t Query_Regulator_Connection(void);
+void Regulator_Set_ADC_Option(void) ;
+void Regulator_Set_Charge_Option_0(void);
+
 void Read_Charge_Status(void);
 //void Control_Charger_Output(uint8_t cell_Num,uint16_t cell_CUR,uint8_t cell_HI_Z);
 void Control_Charger_Output(float vol,uint8_t CELL);
