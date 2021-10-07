@@ -19,12 +19,14 @@ extern float valueBAT,value1S,value2S,value3S,value4S;
 //uint16_t ADC_Value[3];
 //float batdata[6];
 extern uint8_t cell;
+extern struct Adc adc_values;
 
 float tempera;
 
 osThreadId myTask01Handle;
 osThreadId myTask02Handle;
 osThreadId myTask03Handle;
+osThreadId myTask04Handle;
 
 void Led_Task(void const * argument);
 void ADC_Task(void const * argument);
@@ -52,14 +54,17 @@ int main(void)
     boardInit();
     usart_data_transmit(USART0,0X10);  
 
-    osThreadDef(read_adc, ADC_Task, osPriorityHigh, 0, 128);
+    osThreadDef(read_adc, ADC_Task, osPriorityAboveNormal, 0, 128);
     myTask01Handle = osThreadCreate(osThread(read_adc), NULL);
 
-    osThreadDef(Charger_regulator, Charger_Task, osPriorityNormal, 0, 128);
+    osThreadDef(Charger_regulator, Charger_Task, osPriorityHigh, 0, 128);
     myTask02Handle = osThreadCreate(osThread(Charger_regulator), NULL);
 
-    osThreadDef(RGB_LED, Led_Task, osPriorityHigh, 0, 128);
+    osThreadDef(RGB_LED, Led_Task, osPriorityAboveNormal, 0, 128);
     myTask03Handle = osThreadCreate(osThread(RGB_LED), NULL);
+
+    osThreadDef(NONE_TIME, Led_Task, osPriorityHigh, 0, 128);
+    myTask04Handle = osThreadCreate(osThread(NONE_TIME), NULL);
 
     /* start scheduler */
     vTaskStartScheduler();
@@ -72,16 +77,15 @@ void ADC_Task(void const * pvParameters)
 {
     static int i;
     for( ;; ){ 
-        vTaskDelay(1);
         Read_Cell_Voltage();
         tempera = Get_MCU_Temperature();
         cell = Get_Number_Of_Cells();
         Battery_Connection_State();
         i++;
-        printf("%d,%d,%1.3f,%1.3f,%1.3f,%1.3f,%1.3f \r\n",i,cell,valueBAT,value1S,value2S,value3S,value4S);
-//        printf(" %1.3f \r\n",tempera);
-        vTaskDelay(10);
-
+        printf("%d,%d,%1.3f,%1.3f,%1.3f,%1.3f,%1.3f \r\n",i,cell, adc_values.cell_voltage[0],value1S,value2S,value3S,value4S);
+//        printf("%d,%d,%1.3f,%1.3f,%1.3f,%1.3f,%1.3f \r\n",i,cell, adc_values.cell_voltage[0],value1S,value2S,value3S,value4S);
+//        printf(" %1.3f,%1.3f\r\n",tempera,adc_values.vrefint);
+        vTaskDelay(2);
     }
 }
 void Charger_Task(void const * pvParameters)
@@ -110,17 +114,16 @@ void Charger_Task(void const * pvParameters)
         Regulator_Read_ADC();
 
         timer_count++;
-		if (timer_count < 90) {
-        Control_Charger_Output(valueBAT,cell);
+		if (timer_count < 70) {
+        Control_Charger_Output(adc_values.cell_voltage[0],cell);
 		}
 		else if (timer_count > 100){
 			timer_count = 0;
 		}
 		else {
-			Regulator_HI_Z(1);
+        Regulator_HI_Z(1);
 		}
-
-        vTaskDelay(10);
+        vTaskDelay(2);
     }
 }
 
@@ -166,8 +169,8 @@ void Led_Task(void const * argument)
                 vTaskDelay(5);
             }
             else if(Get_Requires_Charging_State() == 1) {
-				LED_Control(red);
-//                Charge_RGB_Control(valueBAT,cell);
+//				LED_Control(red);
+                Charge_RGB_Control(valueBAT,cell);
                 vTaskDelay(5);
 			}
 			else if ((Get_Requires_Charging_State() == 0) && (Get_Balancing_State() == 0)) {
@@ -183,4 +186,9 @@ void Led_Task(void const * argument)
         
 }
 
-
+void NONE_TIME()
+{
+    for( ;; ){
+        vTaskDelay(1);
+    }    
+}

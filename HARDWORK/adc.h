@@ -16,9 +16,9 @@ struct Adc {
 
 void adc_init(void);
 
-uint8_t Get_Adc_Val(uint16_t *bat,uint16_t *s, uint16_t *ss);
+uint8_t Get_Adc_Val(uint32_t *bat,uint32_t *s, uint32_t *ss);
 
-uint8_t get_low_filter(uint16_t *vol1, uint16_t *vol2, uint16_t  *BAT );
+uint8_t get_low_filter(uint32_t *vol1, uint32_t *vol2, uint32_t  *BAT );
 
 uint32_t Get_Cell_Voltage(uint8_t cell_number);
 

@@ -4,7 +4,7 @@
 extern float valueBAT,value1S,value2S,value3S,value4S;
 
 struct Adc adc_values;
-uint16_t ADC_Value[5];
+uint16_t ADC_Value[100];
 float adc_data[5];
 float vrefint, temperature;
 
@@ -20,9 +20,9 @@ void adc_init(void)
 	rcu_periph_clock_enable        (RCU_DMA);                  // 使能外设时钟。
 	dma_deinit                     (DMA_CH0);                  // 复位DMA通道x的所有寄存器。
 	dma_init_struct.periph_addr  = (uint32_t)&(ADC_RDATA);     // 设置DMA的外设地址，也是DMA数据传输的源地址。ADC单次采样转换结束后，会将数据存入ADC_RDATA地址中
-	dma_init_struct.memory_addr  = (uint32_t)ADC_Value;    // 设置DMA存储器地址，也是DMAD数据传输的目标地址。
+	dma_init_struct.memory_addr  = (uint32_t)ADC_Value;        // 设置DMA存储器地址，也是DMAD数据传输的目标地址。
 	dma_init_struct.direction    = DMA_PERIPHERAL_TO_MEMORY;   // 设置DMA的数据传输方向。
-	dma_init_struct.number       = 5;                          // 设置DMA一个周期要传输的数据个数，单位由下方设置。ADC使能了两个采样通道，所以DMA每个周期需要传输两个数据。
+	dma_init_struct.number       = 5;                        // 设置DMA一个周期要传输的数据个数，单位由下方设置。ADC使能了两个采样通道，所以DMA每个周期需要传输两个数据。
 	dma_init_struct.periph_inc   = DMA_PERIPH_INCREASE_DISABLE;// 设置DMA数据传输的源地址自增算法失能。ADC每次转换后数据存放的缓存地址不变，所以这里将之失能。
 	dma_init_struct.memory_inc   = DMA_MEMORY_INCREASE_ENABLE; // 设置DMA数据传输目标地址自增算法使能，因为DMA每个周期需要传送两个数据，所以在一个周期内，目标地址要自增。
 	dma_init_struct.periph_width = DMA_PERIPHERAL_WIDTH_16BIT; // 设置DMA从外设中取出的数据位数。因为ADC转化后的数值是16bit，所以这里设置为1字。
@@ -31,7 +31,7 @@ void adc_init(void)
 	dma_init                       (DMA_CH0, &dma_init_struct);// 将结构体送回，初始化DMA通道x
 	dma_circulation_enable         (DMA_CH0);                  // DMA循环模式使能。这样DMA在传输两个数据结束后，存储器地址复位，自动开启下一轮传输。
 	dma_memory_to_memory_disable   (DMA_CH0);                  // 存储器到存储器DMA传输使能。因为这里用不上，所以失能。
-	dma_channel_enable             (DMA_CH0);	                 // DMA通道x传输使能
+	dma_channel_enable             (DMA_CH0);	               // DMA通道x传输使能
 	
 	/* ADC 配置 */
     RCU_CTL1 |= RCU_CTL1_IRC28MEN;
@@ -48,9 +48,9 @@ void adc_init(void)
 	adc_channel_length_config         (ADC_REGULAR_CHANNEL, 5);                        // 配置规则通道组或注入通道组的长度。因为要用到两个采样通道，所以是2.
 
     adc_tempsensor_vrefint_enable();
-	adc_regular_channel_config        (0, ADC_CHANNEL_0, ADC_SAMPLETIME_55POINT5);     // 配置ADC规则通道组。rank代表扫描顺序，channel要根据ADC通道与GPIO的映射关系表确定。
-	adc_regular_channel_config        (1, ADC_CHANNEL_1, ADC_SAMPLETIME_55POINT5);	
-	adc_regular_channel_config        (2, ADC_CHANNEL_2, ADC_SAMPLETIME_55POINT5);	
+	adc_regular_channel_config        (0, ADC_CHANNEL_0, ADC_SAMPLETIME_239POINT5);     // 配置ADC规则通道组。rank代表扫描顺序，channel要根据ADC通道与GPIO的映射关系表确定。
+	adc_regular_channel_config        (1, ADC_CHANNEL_1, ADC_SAMPLETIME_239POINT5);	
+	adc_regular_channel_config        (2, ADC_CHANNEL_2, ADC_SAMPLETIME_239POINT5);	
 	adc_regular_channel_config        (3, ADC_CHANNEL_16, ADC_SAMPLETIME_239POINT5);	
 	adc_regular_channel_config        (4, ADC_CHANNEL_17, ADC_SAMPLETIME_239POINT5);	
     adc_oversample_mode_enable ();
@@ -64,32 +64,30 @@ void adc_init(void)
 
 }
 
-uint8_t Get_Adc_Val( uint16_t *bat,uint16_t *s ,uint16_t *ss)
+uint8_t Get_Adc_Val( uint32_t *bat,uint32_t *s ,uint32_t *ss)
 {       
-//    *s   =0;
-//	*ss  =0;
-//	*bat =0;
-//    temperature=0;
-//    vrefint = 0;
-//	for(uint8_t i=0;i<10;)
-//	{
-//		*s   += ADC_Value[0];   
-//		*ss  += ADC_Value[1];
-//        *bat += ADC_Value[2];  
-//        temperature += ADC_Value[3];
-//        vrefint += ADC_Value[4];
-
-//        i=i+1;
-//    } 
-		*s   = ADC_Value[0];   
-		*ss  = ADC_Value[1];
-        *bat = ADC_Value[2];  
-        temperature = ADC_Value[3];
-        vrefint = ADC_Value[4];
+    *s   =0;
+	*ss  =0;
+	*bat =0;
+    temperature=0;
+    vrefint = 0;
+	for(uint8_t i=0;i<5;)
+	{
+		*s   += ADC_Value[i++];   
+		*ss  += ADC_Value[i++];
+        *bat += ADC_Value[i++];  
+        temperature += ADC_Value[i++];
+        vrefint += ADC_Value[i++];
+    } 
+    *s= *s;
+    *ss= *ss;
+    *bat = *bat;
+    temperature =temperature;
+    vrefint = vrefint;
     return 0;
 }
 
-uint8_t get_low_filter(uint16_t  *BAT,uint16_t *vol1, uint16_t *vol2)
+uint8_t get_low_filter(uint32_t  *BAT,uint32_t *vol1, uint32_t *vol2)
 {
     float dPower = 0.5; 
     static uint16_t  temperaturelastnum ,Vrefnum = 0,BATnum0 = 0,vol1num1 = 0,vol2num2 = 0;   
@@ -109,10 +107,8 @@ uint8_t get_low_filter(uint16_t  *BAT,uint16_t *vol1, uint16_t *vol2)
     Lastnum0 = BATnum0;                                     //
     Lastnum1 = vol1num1; 
     Lastnum2 = vol2num2;
-
-//    vref_cal = (float)(adcref_read((adcrefcal *) 0x1FFF75AA)); 
-//    VDDA_Volatge = (3.0*vref_cal)/VrefLastnum;   
     adc_values.vrefint=  4096 *1.2/VrefLastnum;
+
     adc_data[0] = Lastnum0;
     adc_data[1] = Lastnum1;
     adc_data[2] = Lastnum2;

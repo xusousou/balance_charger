@@ -3,7 +3,7 @@
 
 
 struct Regulator regulator;
-
+extern volatile struct Battery battery_state;
 
 void BQ25703A_init(void)
 {
@@ -422,12 +422,12 @@ uint32_t Calculate_Max_Charge_Power() {
 //}
 void Control_Charger_Output(float vol,uint8_t CELL)
 {
-    uint8_t cell_Num =0, cell_HI_Z =0;
+    uint8_t cell_Num =0;
     uint16_t cell_CUR=0;
 
     uint16_t  CUR_value, CUR_min, CUR_max,vol_min,vol_max;
     CUR_max=2000;
-    CUR_min=200;
+    CUR_min=192;
 
     Balance_Connection_State();
     cell_Num = Get_Number_Of_Cells();
@@ -436,22 +436,26 @@ void Control_Charger_Output(float vol,uint8_t CELL)
 
     if((vol*1000)>vol_min && (vol*1000)<(vol_max-400) && cell_Num>1){
         cell_CUR = CUR_max;
-    }else if((vol*1000)>(vol_max-400) && (vol*1000)<(vol_max-100)  && cell_Num>1){
-        cell_CUR = CUR_max*(1-(vol*1000)/vol_max);
+    }else if((vol*1000)>(vol_max-200) && (vol*1000)<(vol_max-100)  && cell_Num>1){
+        cell_CUR = CUR_max*(1-(vol*1000)/vol_max)+CUR_min;
     }else if((vol*1000)>(vol_max-100) && (vol*1000)<vol_max  && cell_Num>1){
         cell_CUR= CUR_min;
     }else cell_CUR= 0;
         
-    if(Get_Balance_Connection_State() == CONNECTED && Get_XT_Connection_State() == CONNECTED && Get_Error_State() == 0){
-	Set_Charge_Voltage(cell_Num);
-
-	Set_Charge_Current(cell_CUR);
-
-	Regulator_HI_Z(cell_HI_Z);
+    if(Get_Balance_Connection_State() == CONNECTED && Get_XT_Connection_State() == CONNECTED && Get_Error_State() == 0 && Get_Requires_Charging_State() != 0){
+    if(battery_state.balancing_enabled == 1 ){
+        Set_Charge_Voltage(cell_Num);
+        Set_Charge_Current(CUR_min);
+        Regulator_HI_Z(0);
+    }else {
+        Set_Charge_Voltage(cell_Num);
+        Set_Charge_Current(cell_CUR);
+        Regulator_HI_Z(0);
+        }
     }else{
-    cell_HI_Z=1;
+
 	Set_Charge_Voltage(0);
 	Set_Charge_Current(0);
-	Regulator_HI_Z(cell_HI_Z);
+	Regulator_HI_Z(1);
     }
 }
