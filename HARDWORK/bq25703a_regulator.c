@@ -426,8 +426,8 @@ void Control_Charger_Output(float vol,uint8_t CELL)
     uint16_t cell_CUR=0;
 
     uint16_t  CUR_value, CUR_min, CUR_max,vol_min,vol_max;
-    CUR_max=2000;
-    CUR_min=192;
+    CUR_max=3000;
+    CUR_min=64;
 
     Balance_Connection_State();
     cell_Num = Get_Number_Of_Cells();

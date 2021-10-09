@@ -2,7 +2,7 @@
 
 extern struct Adc adc_values;
 extern float adc_data[5];
-
+extern uint32_t temperature, vrefintnum;
 
 volatile struct Battery battery_state;
 static uint8_t cell_connected_bitmask = 0;
@@ -12,6 +12,7 @@ uint32_t vol_1s, vol_2s, vol_3s, vol_4s, vol_bat;   //uint16_t ADC_1, ADC_2, ADC
 uint8_t cell;
 //uint32_t cellvol1 ,cellvol2;
 
+#ifdef adc_1
 void SW_Init()
 {
     rcu_periph_clock_enable(SWA_CLK);
@@ -45,30 +46,79 @@ uint8_t cell_Select(uint8_t num)
 }
 
 
-//void Balance_Connection_State(void)
-//{
-//    battery_state.number_of_cells = 0;
+//获取电池电压
+void Read_Cell_Voltage()
+{
+    //2S
+    cell_Select(2);   
+//    vTaskDelay(200); 
+    for(uint16_t i=220;i>0;i--)
+    {
+        /*ADC数据处理*/      
+        Get_Adc_Val(&vol_bat,&vol_1s,&vol_2s);
+        get_low_filter(&vol_bat,&vol_1s,&vol_2s);
+        vTaskDelay(1); 
+    }
+    value2S = (float)(adc_data[2]/1 *3.3/4096)*2;
 
-//    if(value1S>MIN_CELL_VOLTAGE_SAFE_LIMIT && value2S<MIN_CELL_VOLTAGE_SAFE_LIMIT && value3S<MIN_CELL_VOLTAGE_SAFE_LIMIT && value4S<MIN_CELL_VOLTAGE_SAFE_LIMIT){
-//        if(valueBAT >= MIN_1SBAT_VOLTAGE && valueBAT <= MAX_1SBAT_VOLTAGE)
-//        battery_state.number_of_cells = 1;
-//    }else if(value1S>MIN_CELL_VOLTAGE_SAFE_LIMIT && value2S>MIN_CELL_VOLTAGE_SAFE_LIMIT && value3S<MIN_CELL_VOLTAGE_SAFE_LIMIT && value4S<MIN_CELL_VOLTAGE_SAFE_LIMIT){
-//        if(valueBAT >= MIN_2SBAT_VOLTAGE && valueBAT <= MAX_2SBAT_VOLTAGE)
-//        battery_state.number_of_cells = 2;
-//    }else if(value1S>MIN_CELL_VOLTAGE_SAFE_LIMIT && value2S>MIN_CELL_VOLTAGE_SAFE_LIMIT && value3S>MIN_CELL_VOLTAGE_SAFE_LIMIT && value4S<MIN_CELL_VOLTAGE_SAFE_LIMIT){
-//        if(valueBAT >= MIN_3SBAT_VOLTAGE && valueBAT <= MAX_3SBAT_VOLTAGE)
-//        battery_state.number_of_cells = 3;
-//    }else if(value1S>MIN_CELL_VOLTAGE_SAFE_LIMIT && value2S>MIN_CELL_VOLTAGE_SAFE_LIMIT && value3S>MIN_CELL_VOLTAGE_SAFE_LIMIT && value4S>MIN_CELL_VOLTAGE_SAFE_LIMIT){
-//        if(valueBAT >= MIN_4SBAT_VOLTAGE && valueBAT <= MAX_4SBAT_VOLTAGE)
-//         battery_state.number_of_cells = 4;
-//    }else{
-//         battery_state.number_of_cells = 0;
-//         Set_Error_State(CELL_CONNECTION_ERROR);
-//    }
-//    if(battery_state.number_of_cells != 0){
-//         Clear_Error_State(CELL_CONNECTION_ERROR);
-//    }
-//}
+    //3S
+    cell_Select(3);
+//    vTaskDelay(200); 
+    for(uint16_t i=220;i>0;i--)
+    {
+        /*ADC数据处理*/      
+        Get_Adc_Val(&vol_bat,&vol_1s,&vol_3s);
+        get_low_filter(&vol_bat,&vol_1s,&vol_3s);
+        vTaskDelay(1); 
+    }
+    value3S = (float)(adc_data[2]/1 *3.3/4096)*2;
+
+    //4S
+    cell_Select(4);
+//    vTaskDelay(200); 
+    for(uint16_t i=220;i>0;i--)
+    {
+        /*ADC数据处理*/      
+        Get_Adc_Val(&vol_bat,&vol_1s,&vol_4s);
+        get_low_filter(&vol_bat,&vol_1s,&vol_4s);
+        vTaskDelay(1); 
+    }
+  
+    valueBAT = (float)(adc_data[0]/1 * 3.3/4096)*11;
+    value1S = (float)(adc_data[1]/1 *3.3/4096)*2;
+    value4S = (float)(adc_data[2]/1 *3.3/4096)*2;  
+     
+    adc_values.cell_voltage[0]=(value1S+value2S+value3S+value4S+valueBAT)/2;
+    adc_values.cell_voltage[1]=value1S;
+    adc_values.cell_voltage[2]=value2S;
+    adc_values.cell_voltage[3]=value3S;
+    adc_values.cell_voltage[4]=value4S;
+    cell_Select(2);
+}
+#else
+//获取电池电压
+void Read_Cell_Voltage()
+{
+    /*ADC数据处理*/      
+    Get_Adc_Val(&vol_bat,&vol_1s,&vol_2s,&vol_3s,&vol_4s);
+
+    adc_values.vrefint =4096 *1.204/vrefintnum;
+    adc_values.temperature = ((1450- (temperature *adc_values.vrefint*1000/4096))/(4300/1000))+25;
+
+    valueBAT = (float)(vol_bat *  adc_values.vrefint/4096)*5.545;
+    value1S = (float)( vol_1s  *  adc_values.vrefint/4096)*6;
+    value2S = (float)( vol_2s  *  adc_values.vrefint/4096)*6;
+    value3S = (float)( vol_3s  *  adc_values.vrefint/4096)*6; 
+    value4S = (float)( vol_4s  *  adc_values.vrefint/4096)*6;  
+     
+    adc_values.cell_voltage[0]=valueBAT;
+    adc_values.cell_voltage[1]=value1S;
+    adc_values.cell_voltage[2]=value2S-value1S;
+    adc_values.cell_voltage[3]=value3S-value2S;
+    adc_values.cell_voltage[4]=value4S-value3S;
+}
+
+#endif
 
 void Balance_Connection_State(void)
 {
@@ -140,39 +190,6 @@ if (( value4S*BATTERY_ADC_MULTIPLIER  > VOLTAGE_CONNECTED_THRESHOLD ) && ( Get_C
 	}
 }
 
-//void Battery_Connection_State()
-//{
-//	if ( Get_Battery_Voltage() > VOLTAGE_CONNECTED_THRESHOLD ) {
-//		battery_state.xt60_connected = CONNECTED;
-//	}
-//	else {
-//		battery_state.xt60_connected = NOT_CONNECTED;
-//	}
-
-//	Balance_Connection_State();
-
-//	MCU_Temperature_Safety_Check();
-
-//	Cell_Voltage_Safety_Check();
-
-//	//Only update the balancing state if charging is off
-//	if (Get_Regulator_Charging_State() == 0) {
-//		Balance_Battery();
-//	}
-
-//	if ((battery_state.xt60_connected == CONNECTED) && (battery_state.balance_port_connected == CONNECTED)){
-//		if (Get_Battery_Voltage() < (battery_state.number_of_cells * CELL_VOLTAGE_TO_ENABLE_CHARGING)) {
-//			battery_state.requires_charging = 1;
-//		}
-//		else {
-//			battery_state.requires_charging = 0;
-//		}
-//	}
-//	else {
-//		battery_state.requires_charging = 0;
-//	}
-//}
-
 
 //电池超压检测
 void Cell_Voltage_Safety_Check()
@@ -200,11 +217,11 @@ void Cell_Voltage_Safety_Check()
 	battery_state.cell_over_voltage = over_voltage_temp;
 }
 
-
+uint32_t vol_error;
 void Battery_Connection_State()
 {
-    uint32_t vol_error;
-    vol_error = fabs(valueBAT-(value1S+value2S+value3S+value4S))*BATTERY_ADC_MULTIPLIER;
+
+    vol_error = fabs( adc_values.cell_voltage[0]-(adc_values.cell_voltage[1] + adc_values.cell_voltage[2] + adc_values.cell_voltage[3] + adc_values.cell_voltage[4]))*BATTERY_ADC_MULTIPLIER;
 
 	if ( valueBAT*BATTERY_ADC_MULTIPLIER > battery_state.number_of_cells * VOLTAGE_CONNECTED_THRESHOLD && vol_error < VOLTAGE_CONNECTED_THRESHOLD) {
 		battery_state.xt_connected = CONNECTED;
@@ -238,55 +255,6 @@ void Battery_Connection_State()
 	}
 }
 
-//获取电池电压
-void Read_Cell_Voltage()
-{
-    //2S
-    cell_Select(2);   
-//    vTaskDelay(200); 
-    for(uint16_t i=220;i>0;i--)
-    {
-        /*ADC数据处理*/      
-        Get_Adc_Val(&vol_bat,&vol_1s,&vol_2s);
-        get_low_filter(&vol_bat,&vol_1s,&vol_2s);
-        vTaskDelay(1); 
-    }
-    value2S = (float)(adc_data[2]/1 *3.3/4096)*2;
-
-    //3S
-    cell_Select(3);
-//    vTaskDelay(200); 
-    for(uint16_t i=220;i>0;i--)
-    {
-        /*ADC数据处理*/      
-        Get_Adc_Val(&vol_bat,&vol_1s,&vol_3s);
-        get_low_filter(&vol_bat,&vol_1s,&vol_3s);
-        vTaskDelay(1); 
-    }
-    value3S = (float)(adc_data[2]/1 *3.3/4096)*2;
-
-    //4S
-    cell_Select(4);
-//    vTaskDelay(200); 
-    for(uint16_t i=220;i>0;i--)
-    {
-        /*ADC数据处理*/      
-        Get_Adc_Val(&vol_bat,&vol_1s,&vol_4s);
-        get_low_filter(&vol_bat,&vol_1s,&vol_4s);
-        vTaskDelay(1); 
-    }
-  
-    valueBAT = (float)(adc_data[0]/1 * 3.3/4096)*11;
-    value1S = (float)(adc_data[1]/1 *3.3/4096)*2;
-    value4S = (float)(adc_data[2]/1 *3.3/4096)*2;  
-     
-    adc_values.cell_voltage[0]=(value1S+value2S+value3S+value4S+valueBAT)/2;
-    adc_values.cell_voltage[1]=value1S;
-    adc_values.cell_voltage[2]=value2S;
-    adc_values.cell_voltage[3]=value3S;
-    adc_values.cell_voltage[4]=value4S;
-    cell_Select(2);
-}
 
 uint8_t Get_Balancing_State()
 {

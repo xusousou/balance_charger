@@ -82,7 +82,7 @@ void ADC_Task(void const * pvParameters)
         cell = Get_Number_Of_Cells();
         Battery_Connection_State();
         i++;
-        printf("%d,%d,%1.3f,%1.3f,%1.3f,%1.3f,%1.3f \r\n",i,cell, adc_values.cell_voltage[0],value1S,value2S,value3S,value4S);
+//        printf("%d,%d,%1.3f,%1.3f,%1.3f,%1.3f,%1.3f \r\n",i,cell, adc_values.cell_voltage[0],value1S,value2S,value3S,value4S);
 //        printf("%d,%d,%1.3f,%1.3f,%1.3f,%1.3f,%1.3f \r\n",i,cell, adc_values.cell_voltage[0],value1S,value2S,value3S,value4S);
 //        printf(" %1.3f,%1.3f\r\n",tempera,adc_values.vrefint);
         vTaskDelay(2);
@@ -114,7 +114,7 @@ void Charger_Task(void const * pvParameters)
         Regulator_Read_ADC();
 
         timer_count++;
-		if (timer_count < 70) {
+		if (timer_count < 90) {
         Control_Charger_Output(adc_values.cell_voltage[0],cell);
 		}
 		else if (timer_count > 100){

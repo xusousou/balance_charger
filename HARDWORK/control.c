@@ -74,7 +74,6 @@ void Balance_Battery()
 
 		float scalar = 0.0f;
 
-		// Scale the balancing thresholds tighter as the battery voltage increases. Allows for faster charging.
 		if (battery_state.xt_connected == CONNECTED) {
 			scalar = (float)CELL_BALANCING_SCALAR_MAX * (1.0f - (((float)max_cell_voltage - (float)MIN_CELL_V_FOR_BALANCING)/((float)CELL_VOLTAGE_TO_ENABLE_CHARGING - (float)MIN_CELL_V_FOR_BALANCING)));
 			if (scalar < 1.0f) {
@@ -92,9 +91,6 @@ void Balance_Battery()
 			battery_state.balancing_enabled = 0;
 		}
 
-		//Check each cell voltage. If XT60 is connected, then allow larger voltage differences that tighten as the battery voltage increases.
-		//If just the balance port is connected, then use the tightest balancing thresholds
-		//If a cell is over CELL_OVER_VOLTAGE_ENABLE_DISCHARGE, then the discharging resistor will turn on
 		for(int i = 1; i <= battery_state.number_of_cells; i++) {
 			if (Get_Cell_Voltage(i)  >= CELL_OVER_VOLTAGE_ENABLE_DISCHARGE) {
 				battery_state.cell_balance_bitmask |= (1<<(i-1));

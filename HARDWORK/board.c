@@ -2,7 +2,7 @@
 
 void boardInit()
 {
-    SW_Init();
+//    SW_Init();
     i2c_init();
     balance_Init();
 
