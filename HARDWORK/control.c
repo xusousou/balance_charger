@@ -56,7 +56,7 @@ void Balancing_GPIO_Control(uint8_t cell_balancing_gpio_bitmask)
         gpio_bit_reset(CELL_1S_DIS_EN_PORT,CELL_1S_DIS_EN_PIN); 
 	}
 }
-
+float scalar = 0.0f;
 void Balance_Battery()
 {
 	if ( (battery_state.balance_port_connected == CONNECTED) && (Get_Error_State() == 0) ) {
@@ -72,8 +72,6 @@ void Balance_Battery()
 			}
 		}
 
-		float scalar = 0.0f;
-
 		if (battery_state.xt_connected == CONNECTED) {
 			scalar = (float)CELL_BALANCING_SCALAR_MAX * (1.0f - (((float)max_cell_voltage - (float)MIN_CELL_V_FOR_BALANCING)/((float)CELL_VOLTAGE_TO_ENABLE_CHARGING - (float)MIN_CELL_V_FOR_BALANCING)));
 			if (scalar < 1.0f) {
@@ -83,7 +81,7 @@ void Balance_Battery()
 		else {
 			scalar = 1.0f;
 		}
-
+//        printf("%d,%d,%1.3f\r\n",min_cell_voltage,max_cell_voltage,scalar);
 		if ( ((max_cell_voltage - min_cell_voltage) >= ((float)CELL_DELTA_V_ENABLE_BALANCING * scalar)) && (min_cell_voltage > MIN_CELL_V_FOR_BALANCING) && (battery_state.balancing_enabled == 0)) {
 			battery_state.balancing_enabled = 1;
 		}

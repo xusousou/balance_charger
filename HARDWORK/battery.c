@@ -1,16 +1,14 @@
 #include "battery.h"
 
 extern struct Adc adc_values;
-extern float adc_data[5];
 extern uint32_t temperature, vrefintnum;
-
+extern uint8_t charger_flag;
 volatile struct Battery battery_state;
 static uint8_t cell_connected_bitmask = 0;
-
 float valueBAT,value1S,value2S,value3S,value4S;
 uint32_t vol_1s, vol_2s, vol_3s, vol_4s, vol_bat;   //uint16_t ADC_1, ADC_2, ADC_4;对应的adc通道顺序
 uint8_t cell;
-//uint32_t cellvol1 ,cellvol2;
+static uint16_t add;
 
 #ifdef adc_1
 void SW_Init()
@@ -101,21 +99,40 @@ void Read_Cell_Voltage()
 {
     /*ADC数据处理*/      
     Get_Adc_Val(&vol_bat,&vol_1s,&vol_2s,&vol_3s,&vol_4s);
+    get_low_filter(&vol_bat,&vol_1s,&vol_2s,&vol_3s,&vol_4s);
 
-    adc_values.vrefint =4096 *1.204/vrefintnum;
+    adc_values.vrefint =4096 *1.200/vrefintnum;
+//    adc_values.vrefint =3.335;
     adc_values.temperature = ((1450- (temperature *adc_values.vrefint*1000/4096))/(4300/1000))+25;
 
-    valueBAT = (float)(vol_bat *  adc_values.vrefint/4096)*5.545;
-    value1S = (float)( vol_1s  *  adc_values.vrefint/4096)*6;
-    value2S = (float)( vol_2s  *  adc_values.vrefint/4096)*6;
-    value3S = (float)( vol_3s  *  adc_values.vrefint/4096)*6; 
-    value4S = (float)( vol_4s  *  adc_values.vrefint/4096)*6;  
+    valueBAT = (float)(vol_bat *  adc_values.vrefint/4096)*(1200+5360)/1200;
+    value1S = (float)( vol_1s  *  adc_values.vrefint/4096)*(1200+3300)/3300;
+    value2S = (float)( vol_2s  *  adc_values.vrefint/4096)*(3300+5360)/3300;
+    value3S = (float)( vol_3s  *  adc_values.vrefint/4096)*(1200+3570)/1200; 
+    value4S = (float)( vol_4s  *  adc_values.vrefint/4096)*(1200+5360)/1200;  
      
-    adc_values.cell_voltage[0]=valueBAT;
+
     adc_values.cell_voltage[1]=value1S;
     adc_values.cell_voltage[2]=value2S-value1S;
     adc_values.cell_voltage[3]=value3S-value2S;
     adc_values.cell_voltage[4]=value4S-value3S;
+//    if(Get_XT_Connection_State() == CONNECTED){
+        switch (Get_Number_Of_Cells()) {
+            case 2: 
+                adc_values.cell_voltage[0]=adc_values.cell_voltage[1]+adc_values.cell_voltage[2];
+                break;
+            case 3: 
+                adc_values.cell_voltage[0]=adc_values.cell_voltage[1]+adc_values.cell_voltage[2]+adc_values.cell_voltage[3];
+                break;
+            case 4: 
+                adc_values.cell_voltage[0]=adc_values.cell_voltage[1]+adc_values.cell_voltage[2]+adc_values.cell_voltage[3]+adc_values.cell_voltage[4];
+                break;
+            default:
+                adc_values.cell_voltage[0]=valueBAT;
+                break;
+            }
+//    }
+
 }
 
 #endif
@@ -191,7 +208,7 @@ if (( value4S*BATTERY_ADC_MULTIPLIER  > VOLTAGE_CONNECTED_THRESHOLD ) && ( Get_C
 }
 
 
-//电池超压检测
+//电池欠压、超压检测
 void Cell_Voltage_Safety_Check()
 {
 	uint8_t over_voltage_temp = 0;
@@ -217,13 +234,13 @@ void Cell_Voltage_Safety_Check()
 	battery_state.cell_over_voltage = over_voltage_temp;
 }
 
-uint32_t vol_error;
+
 void Battery_Connection_State()
 {
+    uint32_t vol_error;
+    vol_error = fabs( valueBAT-(adc_values.cell_voltage[1] + adc_values.cell_voltage[2] + adc_values.cell_voltage[3] + adc_values.cell_voltage[4]))*BATTERY_ADC_MULTIPLIER;
 
-    vol_error = fabs( adc_values.cell_voltage[0]-(adc_values.cell_voltage[1] + adc_values.cell_voltage[2] + adc_values.cell_voltage[3] + adc_values.cell_voltage[4]))*BATTERY_ADC_MULTIPLIER;
-
-	if ( valueBAT*BATTERY_ADC_MULTIPLIER > battery_state.number_of_cells * VOLTAGE_CONNECTED_THRESHOLD && vol_error < VOLTAGE_CONNECTED_THRESHOLD) {
+	if ( valueBAT*BATTERY_ADC_MULTIPLIER > 2* VOLTAGE_CONNECTED_THRESHOLD && vol_error < 2*VOLTAGE_CONNECTED_THRESHOLD) {
 		battery_state.xt_connected = CONNECTED;
 	}
 	else {
@@ -233,15 +250,15 @@ void Battery_Connection_State()
 	Balance_Connection_State();
 
 //	MCU_Temperature_Safety_Check();
-
 	Cell_Voltage_Safety_Check();
 
+    if(Get_Balancing_State() == 0){
+        Balancing_GPIO_Control(0);
+    }
 	//Only update the balancing state if charging is off
-	if (Get_Regulator_Charging_State() == 0) {
+	if (Get_Regulator_Charging_State() == 0 || Get_Balancing_State() != 0) {
 		Balance_Battery();
 	}
-//cellvol1 = valueBAT * BATTERY_ADC_MULTIPLIER;
-//cellvol2 = battery_state.number_of_cells * CELL_VOLTAGE_TO_ENABLE_CHARGING;
 	if ((battery_state.xt_connected == CONNECTED) && (battery_state.balance_port_connected == CONNECTED)){
 		if (Get_Cell_Voltage(0) < (battery_state.number_of_cells * CELL_VOLTAGE_TO_ENABLE_CHARGING)) {
 			battery_state.requires_charging = 1;
@@ -254,7 +271,21 @@ void Battery_Connection_State()
 		battery_state.requires_charging = 0;
 	}
 }
+float vol_num;
+void full_charger_Check(float vol, uint8_t CELL)
+{
+    vol_num = vol+vol_num;
+    add++;
+    if(add == 1200) {
+        vol_num =vol_num/1200;
 
+        if(vol_num<=4.165*CELL && battery_state.requires_charging == 1){
+            charger_flag=1;
+        }else if(vol_num>4.185*CELL	&& battery_state.requires_charging == 0){
+            charger_flag=0;
+        }
+    }else if(add > 1200)  add=0;
+}
 
 uint8_t Get_Balancing_State()
 {

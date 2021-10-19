@@ -21,6 +21,7 @@
 #include "drv_i2c.h"
 #include "bq25703a_regulator.h"
 #include "battery.h"
+#include "key.h"
 
 
 void boardInit(void);

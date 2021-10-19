@@ -4,6 +4,7 @@
 
 struct Regulator regulator;
 extern volatile struct Battery battery_state;
+extern uint8_t charger_flag;
 
 void BQ25703A_init(void)
 {
@@ -268,14 +269,13 @@ void Set_Charge_Current(uint32_t charge_current_limit) {
 	uint8_t charge_current_register_1_value = 0;
 	uint8_t charge_current_register_2_value = 0;
 	uint32_t charge_current = 0,current_limit = 0 ;
-  current_limit = (charge_current_limit*10)/10.0;   //采样电阻约为12.6mΩ；
+    current_limit = charge_current_limit;   //采样电阻为10mΩ；
 
 	if (current_limit > MAX_CHARGE_CURRENT_MA) {
 		current_limit = MAX_CHARGE_CURRENT_MA;
 	}  
     
 //	regulator.max_charge_current_ma = charge_current_limit;
-
 	if (current_limit != 0){
 		charge_current = current_limit/64;
 	}
@@ -283,46 +283,12 @@ void Set_Charge_Current(uint32_t charge_current_limit) {
 		charge_current = 128;
 	}
 	//0-128 which remaps from 64mA-8.128A. 7 bit value.
-
-    
 	if (charge_current <= 128) {
 		charge_current_register_1_value = ((charge_current & 0x03)<<6);
 		charge_current_register_2_value = ((charge_current >> 2)&0x1f);
 	}
-
 	I2C_Write_Two_Byte_Register(CHARGE_CURRENT_ADDR, charge_current_register_1_value,charge_current_register_2_value );
-
 	return ;
-
-
-//	uint32_t charge_current = 0;
-
-//	if (charge_current_limit > MAX_CHARGE_CURRENT_MA) {
-//		charge_current_limit = MAX_CHARGE_CURRENT_MA;
-//	}
-
-//	regulator.max_charge_current_ma = charge_current_limit;
-
-//	if (charge_current_limit != 0){
-//		charge_current = charge_current_limit/64;
-//	}
-
-//	if (charge_current > 128) {
-//		charge_current = 128;
-//	}
-
-//	//0-128 which remaps from 64mA-8.128A. 7 bit value.
-//	uint8_t charge_current_register_1_value = 0;
-//	uint8_t charge_current_register_2_value = 0;
-
-//	if ((charge_current >= 0) || (charge_current <= 128)) {
-//		charge_current_register_1_value = (charge_current >> 2);
-//		charge_current_register_2_value = (charge_current << 6);
-//	}
-
-//	I2C_Write_Two_Byte_Register(CHARGE_CURRENT_ADDR, charge_current_register_2_value, charge_current_register_1_value);
-
-//	return;
 }
 
 
@@ -378,84 +344,58 @@ void Set_Charge_Voltage(uint8_t number_of_cells) {
 **********************************************************************************************************/
 uint32_t Calculate_Max_Charge_Power() {
 
-//	//Account for system losses with ASSUME_EFFICIENCY fudge factor to not overload source
-//	uint32_t charging_power_mw = (((float)(regulator.vbus_voltage/REG_ADC_MULTIPLIER) * Get_Max_Input_Current()) * ASSUME_EFFICIENCY);
-
-//	if (charging_power_mw > MAX_CHARGING_POWER) {
-//		charging_power_mw = MAX_CHARGING_POWER;
-//	}
-
-//	if (charging_power_mw > Get_Max_Input_Power()){
-//		charging_power_mw = Get_Max_Input_Power() * ASSUME_EFFICIENCY;
-//	}
-
-//	//Throttle charging power if temperature is too high
-//	if (Get_MCU_Temperature() > TEMP_THROTTLE_THRESH_C){
-//		float temperature = (float)Get_MCU_Temperature();
-
-//		float power_scalar = 1.0f - ((float)(0.0333 * temperature) - 1.33f);
-
-//		if (power_scalar > 1.0f) {
-//			power_scalar = 1.0f;
-//		}
-//		if (power_scalar < 0.00f) {
-//			power_scalar = 0.00f;
-//		}
-
-//		charging_power_mw = charging_power_mw * power_scalar;
-//	}
-
-//	return charging_power_mw;
     return 0;
 }
 
 /**********************************************************************************************************
 *确定充电器输出是否应该打开并根据需要设置电压和电流参数
 **********************************************************************************************************/
-//void Control_Charger_Output(uint8_t cell_Num,uint16_t cell_CUR,uint8_t cell_HI_Z) {
 
-//		Set_Charge_Voltage(cell_Num);
-
-//		Set_Charge_Current(cell_CUR);
-
-//		Regulator_HI_Z(cell_HI_Z);
-//}
-void Control_Charger_Output(float vol,uint8_t CELL)
+uint32_t cell_CUR;
+void Control_Charger_Output(float vol, uint8_t CELL)
 {
-    uint8_t cell_Num =0;
-    uint16_t cell_CUR=0;
+    uint8_t cell_Num;
 
-    uint16_t  CUR_value, CUR_min, CUR_max,vol_min,vol_max;
-    CUR_max=3000;
+    float  CUR_value, CUR_min, CUR_max,vol_min,vol_max;
+    cell_Num =CELL;
+    vol_max=cell_Num*4.215;
+    vol_min=cell_Num*1;
     CUR_min=64;
-
+    if(cell_Num==4){
+        CUR_max=3000;
+    }else if(cell_Num==3){
+        CUR_max=3500;
+    }else if(cell_Num==2){
+        CUR_max=2500;
+    }else CUR_max=0;
+   
     Balance_Connection_State();
-    cell_Num = Get_Number_Of_Cells();
-    vol_max=(CELL*4.20)*1000;
-    vol_min=(CELL*4.20-2.55)*1000;
 
-    if((vol*1000)>vol_min && (vol*1000)<(vol_max-400) && cell_Num>1){
-        cell_CUR = CUR_max;
-    }else if((vol*1000)>(vol_max-200) && (vol*1000)<(vol_max-100)  && cell_Num>1){
-        cell_CUR = CUR_max*(1-(vol*1000)/vol_max)+CUR_min;
-    }else if((vol*1000)>(vol_max-100) && (vol*1000)<vol_max  && cell_Num>1){
+    if(vol>4.1*cell_Num && vol<=(vol_max-0.05) && cell_Num>1){
+        cell_CUR= vol * ((CUR_max-CUR_min)/((vol_max-0.05)-(4.1*cell_Num)));
+    }else if(vol>(vol_max-0.05) && vol<=vol_max && cell_Num>1){
+        cell_CUR = CUR_min*cell_Num;
+    }else if(vol>vol_min && vol<=4.1*cell_Num  && cell_Num>1){
+        cell_CUR= CUR_max;
+    }else{
+        cell_CUR = 0;
+    }
+    if( battery_state.balancing_enabled == 1 && cell_Num>1){
         cell_CUR= CUR_min;
-    }else cell_CUR= 0;
-        
-    if(Get_Balance_Connection_State() == CONNECTED && Get_XT_Connection_State() == CONNECTED && Get_Error_State() == 0 && Get_Requires_Charging_State() != 0){
-    if(battery_state.balancing_enabled == 1 ){
-        Set_Charge_Voltage(cell_Num);
-        Set_Charge_Current(CUR_min);
-        Regulator_HI_Z(0);
-    }else {
+    }
+     if(cell_CUR>3500){
+        cell_CUR=3500;
+    }else if(cell_CUR<=0){
+        cell_CUR=0;
+    }
+
+    if(cell_Num>1 && Get_Error_State() == 0 && battery_state.cell_over_voltage == 0 && Get_Requires_Charging_State() == 1){
         Set_Charge_Voltage(cell_Num);
         Set_Charge_Current(cell_CUR);
         Regulator_HI_Z(0);
-        }
     }else{
-
-	Set_Charge_Voltage(0);
-	Set_Charge_Current(0);
-	Regulator_HI_Z(1);
+        Set_Charge_Voltage(0);
+        Set_Charge_Current(0);
+        Regulator_HI_Z(1);
     }
 }

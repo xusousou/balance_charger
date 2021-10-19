@@ -21,12 +21,7 @@ struct Regulator {
 	uint32_t charge_current;
 	uint32_t input_current;
 	uint32_t max_charge_current_ma;
-    
 };
-
-
-
-//#define I2C_TIMEOUT					(500 / portTICK_PERIOD_MS)
 
 #define BQ26703A_I2C_ADDRESS		0xD6
 #define BQ26703A_MANUFACTURER_ID	0x40
@@ -98,7 +93,7 @@ struct Regulator {
 #define MAX_CHARGE_CURRENT_MA		6000
 #define ASSUME_EFFICIENCY			0.85f
 #define BATTERY_DISCONNECT_THRESH	(uint32_t)(4.215 * REG_ADC_MULTIPLIER)
-#define MAX_CHARGING_POWER			60000
+#define MAX_CHARGING_POWER			65000
 #define NON_USB_PD_CHARGE_POWER		2500
 
 #define TEMP_THROTTLE_THRESH_C		40
@@ -131,5 +126,6 @@ void Regulator_Set_Charge_Option_0(void);
 void Read_Charge_Status(void);
 //void Control_Charger_Output(uint8_t cell_Num,uint16_t cell_CUR,uint8_t cell_HI_Z);
 void Control_Charger_Output(float vol,uint8_t CELL);
-
+void Set_Charge_Current(uint32_t charge_current_limit);
+void Set_Charge_Voltage(uint8_t number_of_cells);
 #endif

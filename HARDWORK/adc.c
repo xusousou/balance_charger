@@ -135,7 +135,7 @@ float Get_MCU_Temperature(){
 
 struct Adc adc_values;
 uint16_t ADC_Value[70];
-float adc_data[5];
+//float adc_data[5];
 uint32_t temperature, vrefintnum;
 
 
@@ -170,15 +170,22 @@ void adc_init(void)
     RCU_CTL1 |= RCU_CTL1_IRC28MEN;
     rcu_osci_stab_wait(RCU_IRC28M);
 	rcu_adc_clock_config              (RCU_ADCCK_IRC28M);                              // 设置ADC的采样时钟分频。
+	rcu_periph_clock_enable           (RCU_ADC); 
+//    /* ADC continuous function enable */
+//    adc_special_function_config(ADC_CONTINUOUS_MODE, ENABLE);
+//    /* ADC scan function enable */
+//    adc_special_function_config(ADC_SCAN_MODE, ENABLE);
+//    /* ADC data alignment config */
+//    adc_data_alignment_config(ADC_DATAALIGN_RIGHT);
+//    /* ADC channel length config */
+//    adc_channel_length_config(ADC_REGULAR_CHANNEL, 7U);                                      // 使能外设时钟。
 
-	rcu_periph_clock_enable           (RCU_ADC);                                       // 使能外设时钟。
-	adc_deinit                        ();                                              // 复位ADC外设。
 	adc_special_function_config       (ADC_SCAN_MODE, ENABLE);                         // 配置ADC扫描转换模式。
 	adc_special_function_config       (ADC_CONTINUOUS_MODE, ENABLE);                   // 配置ADC连续转换模式。
     adc_resolution_config(ADC_RESOLUTION_12B);
     adc_oversample_mode_config( ADC_OVERSAMPLING_ALL_CONVERT,ADC_OVERSAMPLING_SHIFT_8B, ADC_OVERSAMPLING_RATIO_MUL256);
 	adc_data_alignment_config         (ADC_DATAALIGN_RIGHT);                           // 配置ADC数据对齐方式是右对齐。
-	adc_channel_length_config         (ADC_REGULAR_CHANNEL, 7);                        // 配置规则通道组或注入通道组的长度。因为要用到两个采样通道，所以是2.
+	adc_channel_length_config         (ADC_REGULAR_CHANNEL, 7U);                        // 配置规则通道组或注入通道组的长度。因为要用到两个采样通道，所以是2.
 
     adc_tempsensor_vrefint_enable();	
 	adc_regular_channel_config        (0, ADC_CHANNEL_2, ADC_SAMPLETIME_239POINT5);     // 配置ADC规则通道组。rank代表扫描顺序，channel要根据ADC通道与GPIO的映射关系表确定。
@@ -193,15 +200,16 @@ void adc_init(void)
     adc_external_trigger_config(ADC_REGULAR_CHANNEL,ENABLE);
 
 	adc_enable                        ();                                              // 使能ADC外设
-    delay_1ms(5);//延时非常重要
+    delay_1ms(10);//延时非常重要
+    delay_1ms(10);//延时非常重要
+    delay_1ms(500);
 	adc_calibration_enable            ();                                              // ADC校准复位
+    delay_1ms(10);//延时非常重要
 	adc_dma_mode_enable               ();                                              // ADCx DMA请求使能
 	adc_software_trigger_enable       (ADC_REGULAR_CHANNEL);                           // ADC软件触发使能。
-
-
 }
 
-uint8_t Get_Adc_Val( uint32_t *bat, uint32_t *s, uint32_t *ss, uint32_t *sss, uint32_t *ssss)
+void Get_Adc_Val( uint32_t *bat, uint32_t *s, uint32_t *ss, uint32_t *sss, uint32_t *ssss)
 {  
 	*bat =0;
     *s   =0;
@@ -227,7 +235,37 @@ uint8_t Get_Adc_Val( uint32_t *bat, uint32_t *s, uint32_t *ss, uint32_t *sss, ui
     *ssss= *ssss/10;
     temperature =temperature/10;
     vrefintnum = vrefintnum/10;
-    return 0;
+
+}
+
+void get_low_filter(uint32_t *bat, uint32_t *s, uint32_t *ss, uint32_t *sss, uint32_t *ssss)
+{
+    float dPower = 0.1; 
+    static uint32_t  temperaturelastnum ,Vrefnum = 0,BATnum0 = 0,vol1num1 = 0,vol2num2 = 0,vol3num3 = 0,vol4num4 = 0;   
+    static uint32_t  temperaturenum = 0,VrefLastnum,Lastnum0,Lastnum1,Lastnum2,Lastnum3,Lastnum4; //
+    
+    BATnum0  = ( *bat * dPower ) + ( 1 - dPower ) * Lastnum0; //
+    vol1num1 = ( *s * dPower ) + ( 1 - dPower ) * Lastnum1; //
+    vol2num2 = ( *ss * dPower ) + ( 1 - dPower ) * Lastnum2; // 
+    vol3num3 = ( *sss * dPower ) + ( 1 - dPower ) * Lastnum3; //
+    vol4num4 = ( *ssss * dPower ) + ( 1 - dPower ) * Lastnum4; // 
+
+    Vrefnum      = ( vrefintnum * dPower ) + ( 1 - dPower ) * VrefLastnum; // 
+    VrefLastnum  = Vrefnum;
+
+
+    Lastnum0 = BATnum0;                                     //
+    Lastnum1 = vol1num1; 
+    Lastnum2 = vol2num2;
+    Lastnum3 = vol3num3; 
+    Lastnum4 = vol4num4;
+
+    *bat  = Lastnum0;
+    *s    = vol1num1;
+    *ss   = vol2num2;
+    *sss  = vol3num3;
+    *ssss = vol4num4;
+    vrefintnum   = VrefLastnum;
 }
 
 uint32_t Get_Cell_Voltage(uint8_t cell_number) {

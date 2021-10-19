@@ -26,7 +26,7 @@
 void balance_Init(void);
 
 void Balance_Battery();
-
+void Balancing_GPIO_Control(uint8_t cell_balancing_gpio_bitmask);
 
 
 #endif
