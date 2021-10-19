@@ -1,4 +1,4 @@
-﻿/*!
+/*!
     \file  system_gd32e23x.c
     \brief CMSIS Cortex-M23 Device Peripheral Access Layer Source File for
            GD32E1x0 Device Series

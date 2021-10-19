@@ -14,16 +14,16 @@
       <uAC6>1</uAC6>
       <TargetOption>
         <TargetCommonOption>
-          <Device>GD32E230K6</Device>
+          <Device>GD32E230K8</Device>
           <Vendor>GigaDevice</Vendor>
           <PackID>GigaDevice.GD32E23x_DFP.1.0.0</PackID>
           <PackURL>http://gd32mcu.21ic.com/data/documents/yingyongruanjian/</PackURL>
-          <Cpu>IRAM(0x20000000,0x0001800) IROM(0x08000000,0x0008000) CPUTYPE("Cortex-M23") CLOCK(12000000) ELITTLE</Cpu>
+          <Cpu>IRAM(0x20000000,0x0002000) IROM(0x08000000,0x0010000) CPUTYPE("Cortex-M23") CLOCK(12000000) ELITTLE</Cpu>
           <FlashUtilSpec></FlashUtilSpec>
           <StartupFile></StartupFile>
-          <FlashDriverDll>UL2V8M(-S0 -C0 -P0 -FD20000000 -FC1000 -FN1 -FF0GD32E230 -FS08000000 -FL08000 -FP0($$Device:GD32E230K6$Flash\GD32E230.FLM))</FlashDriverDll>
+          <FlashDriverDll>UL2V8M(-S0 -C0 -P0 -FD20000000 -FC1000 -FN1 -FF0GD32E23x -FS08000000 -FL010000 -FP0($$Device:GD32E230K8$Flash\GD32E23x.FLM))</FlashDriverDll>
           <DeviceId>0</DeviceId>
-          <RegisterFile>$$Device:GD32E230K6$Device\Include\gd32e230.h</RegisterFile>
+          <RegisterFile>$$Device:GD32E230K8$Device\Include\gd32e23x.h</RegisterFile>
           <MemoryEnv></MemoryEnv>
           <Cmp></Cmp>
           <Asm></Asm>
@@ -33,7 +33,7 @@
           <SLE66CMisc></SLE66CMisc>
           <SLE66AMisc></SLE66AMisc>
           <SLE66LinkerMisc></SLE66LinkerMisc>
-          <SFDFile>$$Device:GD32E230K6$SVD\GD32E230.svd</SFDFile>
+          <SFDFile>$$Device:GD32E230K8$SVD\GD32E230.svd</SFDFile>
           <bCustSvd>0</bCustSvd>
           <UseEnv>0</UseEnv>
           <BinPath></BinPath>
@@ -56,7 +56,7 @@
           <DebugInformation>1</DebugInformation>
           <BrowseInformation>1</BrowseInformation>
           <ListingPath>..\outfile\</ListingPath>
-          <HexFormatSelection>1</HexFormatSelection>
+          <HexFormatSelection>0</HexFormatSelection>
           <Merge32K>0</Merge32K>
           <CreateBatchFile>0</CreateBatchFile>
           <BeforeCompile>
@@ -120,7 +120,7 @@
         </DllOption>
         <DebugOption>
           <OPTHX>
-            <HexSelection>1</HexSelection>
+            <HexSelection>0</HexSelection>
             <HexRangeLowAddress>0</HexRangeLowAddress>
             <HexRangeHighAddress>0</HexRangeHighAddress>
             <HexOffset>0</HexOffset>
@@ -138,7 +138,7 @@
           </Flash1>
           <bUseTDR>1</bUseTDR>
           <Flash2>BIN\UL2V8M.DLL</Flash2>
-          <Flash3>"" ()</Flash3>
+          <Flash3></Flash3>
           <Flash4></Flash4>
           <pFcarmOut></pFcarmOut>
           <pFcarmGrp></pFcarmGrp>
@@ -246,12 +246,12 @@
               <IRAM>
                 <Type>0</Type>
                 <StartAddress>0x20000000</StartAddress>
-                <Size>0x1800</Size>
+                <Size>0x2000</Size>
               </IRAM>
               <IROM>
                 <Type>1</Type>
                 <StartAddress>0x8000000</StartAddress>
-                <Size>0x8000</Size>
+                <Size>0x10000</Size>
               </IROM>
               <XRAM>
                 <Type>0</Type>
@@ -276,7 +276,7 @@
               <OCR_RVCT4>
                 <Type>1</Type>
                 <StartAddress>0x8000000</StartAddress>
-                <Size>0x8000</Size>
+                <Size>0x10000</Size>
               </OCR_RVCT4>
               <OCR_RVCT5>
                 <Type>1</Type>
@@ -301,7 +301,7 @@
               <OCR_RVCT9>
                 <Type>0</Type>
                 <StartAddress>0x20000000</StartAddress>
-                <Size>0x1800</Size>
+                <Size>0x2000</Size>
               </OCR_RVCT9>
               <OCR_RVCT10>
                 <Type>0</Type>
@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>GD32E230,USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>..\CMSIS_RTOS;..\GD32E23x_Firmware_Library\CMSIS\GD\GD32E23x\Include;..\GD32E23x_Firmware_Library\CMSIS;..\GD32E23x_Firmware_Library\GD32E23x_standard_peripheral\Include;..\HARDWORK;..\..\Balance_Charger_DEMO</IncludePath>
+              <IncludePath>..\CMSIS_RTOS;..\GD32E23x_Firmware_Library\CMSIS\GD\GD32E23x\Include;..\GD32E23x_Firmware_Library\CMSIS;..\GD32E23x_Firmware_Library\GD32E23x_standard_peripheral\Include;..\HARDWORK;..\..\balance_charger</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -403,16 +403,6 @@
               <FileType>1</FileType>
               <FilePath>..\gd32e23x_it.c</FilePath>
             </File>
-            <File>
-              <FileName>system_gd32e23x.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\GD32E23x_Firmware_Library\CMSIS\GD\GD32E23x\Source\system_gd32e23x.c</FilePath>
-            </File>
-            <File>
-              <FileName>startup_gd32e23x.s</FileName>
-              <FileType>2</FileType>
-              <FilePath>..\GD32E23x_Firmware_Library\CMSIS\GD\GD32E23x\Source\ARM\startup_gd32e23x.s</FilePath>
-            </File>
           </Files>
         </Group>
         <Group>
@@ -462,6 +452,11 @@
               <FileName>battery.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\HARDWORK\battery.c</FilePath>
+            </File>
+            <File>
+              <FileName>key.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWORK\key.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -658,6 +653,9 @@
           <GroupName>::CMSIS</GroupName>
         </Group>
         <Group>
+          <GroupName>::Device</GroupName>
+        </Group>
+        <Group>
           <GroupName>::RTOS</GroupName>
         </Group>
       </Groups>
@@ -703,6 +701,12 @@
           <targetInfo name="GD32E230K_START"/>
         </targetInfos>
       </component>
+      <component Cclass="Device" Cgroup="Startup" Cvendor="GigaDevice" Cversion="1.0.0" condition="GD32E23x">
+        <package name="GD32E23x_DFP" schemaVersion="1.3" url="http://gd32mcu.21ic.com/data/documents/yingyongruanjian/" vendor="GigaDevice" version="1.0.0"/>
+        <targetInfos>
+          <targetInfo name="GD32E230K_START"/>
+        </targetInfos>
+      </component>
     </components>
     <files>
       <file attr="config" category="source" condition="Compiler ARMCC" name="Device\Source\ARM\startup_gd32e23x.s" version="1.0.0">
@@ -716,6 +720,22 @@
         <component Cclass="Device" Cgroup="Startup" Cvendor="GigaDevice" Cversion="1.0.0" condition="GD32E23x"/>
         <package name="GD32E23x_DFP" schemaVersion="1.3" url="http://gd32mcu.21ic.com/data/documents/yingyongruanjian/" vendor="GigaDevice" version="1.0.0"/>
         <targetInfos/>
+      </file>
+      <file attr="config" category="source" condition="Compiler ARMCC" name="Device\Source\ARM\startup_gd32e23x.s" version="1.0.0">
+        <instance index="0">RTE\Device\GD32E230K8\startup_gd32e23x.s</instance>
+        <component Cclass="Device" Cgroup="Startup" Cvendor="GigaDevice" Cversion="1.0.0" condition="GD32E23x"/>
+        <package name="GD32E23x_DFP" schemaVersion="1.3" url="http://gd32mcu.21ic.com/data/documents/yingyongruanjian/" vendor="GigaDevice" version="1.0.0"/>
+        <targetInfos>
+          <targetInfo name="GD32E230K_START"/>
+        </targetInfos>
+      </file>
+      <file attr="config" category="source" name="Device\Source\system_gd32e23x.c" version="1.0.0">
+        <instance index="0">RTE\Device\GD32E230K8\system_gd32e23x.c</instance>
+        <component Cclass="Device" Cgroup="Startup" Cvendor="GigaDevice" Cversion="1.0.0" condition="GD32E23x"/>
+        <package name="GD32E23x_DFP" schemaVersion="1.3" url="http://gd32mcu.21ic.com/data/documents/yingyongruanjian/" vendor="GigaDevice" version="1.0.0"/>
+        <targetInfos>
+          <targetInfo name="GD32E230K_START"/>
+        </targetInfos>
       </file>
       <file attr="config" category="header" condition="CoreM" name="Config\ARMCM\FreeRTOSConfig.h" version="10.2.0">
         <instance index="0">RTE\RTOS\FreeRTOSConfig.h</instance>
