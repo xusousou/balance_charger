@@ -118,7 +118,7 @@ int  RedMinus, GreenMinus, BlueMinus; // 颜色差（color1 - color0）
 float  RedStep, GreenStep, BlueStep; // 各色步进值
 unsigned char NStep; // 需要几步
 unsigned long color; // 结果色
-static uint16_t i ;
+unsigned char i ;
 
 unsigned char abs0(int num)//求绝对值
 {
@@ -153,35 +153,36 @@ void chargerToColor(unsigned long color0, unsigned long color1, float bat, uint8
     Color_decomposition(color0,color1);
  	switch (cell) 
     {
+        case 0: 
+            Triangular(NStep);     
+        break;
         case 2: 
-            if(bat <= 6){
+            if(bat <= 7){
                 i = 1;
-            }else if(bat > 6 && bat <= 8.40){
-                i=NStep - (8.40-bat)/2.5*NStep;
+            }else if(bat >7 && bat <= 8.5 ){
+                i=NStep - (8.5-bat)/1.5*NStep;
             }else  i = 255;       
         break;
         case 3: 
-            if(bat <= 9){
+            if(bat <= 10.5){
                 i = 1;
-            }else if(bat > 9 && bat <= 12.6){
-                i= NStep - (12.6-bat)/3.8*NStep;
+            }else if(bat > 10.5 && bat <= 13){
+                i= NStep - (13-bat)/2.5*NStep;
             }else  i = 255;         
         break;
         case 4: 
-            if(bat <= 12){
+            if(bat <= 14){
                 i = 1;
-            }else if(bat > 12 && bat <= 16.8){
-                i= NStep - (16.8-bat)/5*NStep;
+            }else if(bat > 14 && bat <= 17){
+                i= NStep - (17-bat)/3*NStep;
             }else  i = 255;         
         break;
         default:
-//            Color_decomposition(none,white);
-            Triangular(NStep);
         break;
     }
 //    printf("%d,%1.3f,%d \r\n",i,bat,NStep);
     LED_Control(ColorToColor(i));
-    delay_us(100);
+//    delay_us(100);
 }
 
 unsigned long  ColorToColor(uint8_t i)
@@ -227,7 +228,44 @@ void Color_decomposition(unsigned long color0, unsigned long color1)
     BlueStep = (float)BlueMinus / NStep;
 }
 
-
+uint16_t SE = 0;
+uint8_t bianhuan =1;
+void Colorful_gradient()
+{
+    SE++;
+	switch (bianhuan) 
+    {
+        case 1: 
+            Color_decomposition(red,green);
+            LED_Control(ColorToColor(SE));  
+            if(ColorToColor(SE) == green){
+                bianhuan++;
+            }   
+        break;
+        case 2: 
+            Color_decomposition(green,blue);
+            LED_Control(ColorToColor(SE));  
+            if(ColorToColor(SE) == blue){
+                bianhuan++;
+            }    
+        break;
+        case 3: 
+            Color_decomposition(blue,red);
+            LED_Control(ColorToColor(SE));  
+            if(ColorToColor(SE) == red){
+                bianhuan++;
+            }          
+        break;
+        default:
+//            Color_decomposition(none,white);
+//            Triangular(NStep);
+        break;
+    }
+    if(bianhuan > 3) {
+        SE = 0;
+        bianhuan = 1;
+    }
+}
 
 
 #elif  Common_positive_RGB

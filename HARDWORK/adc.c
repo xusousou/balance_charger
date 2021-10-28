@@ -235,7 +235,6 @@ void Get_Adc_Val( uint32_t *bat, uint32_t *s, uint32_t *ss, uint32_t *sss, uint3
     *ssss= *ssss/10;
     temperature =temperature/10;
     vrefintnum = vrefintnum/10;
-
 }
 
 void get_low_filter(uint32_t *bat, uint32_t *s, uint32_t *ss, uint32_t *sss, uint32_t *ssss)

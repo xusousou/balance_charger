@@ -8,7 +8,9 @@ static uint8_t cell_connected_bitmask = 0;
 float valueBAT,value1S,value2S,value3S,value4S;
 uint32_t vol_1s, vol_2s, vol_3s, vol_4s, vol_bat;   //uint16_t ADC_1, ADC_2, ADC_4;对应的adc通道顺序
 uint8_t cell;
-static uint16_t add;
+
+float vol_num,volmax,volmin;
+static uint32_t add;
 
 #ifdef adc_1
 void SW_Init()
@@ -111,7 +113,6 @@ void Read_Cell_Voltage()
     value3S = (float)( vol_3s  *  adc_values.vrefint/4096)*(1200+3570)/1200; 
     value4S = (float)( vol_4s  *  adc_values.vrefint/4096)*(1200+5360)/1200;  
      
-
     adc_values.cell_voltage[1]=value1S;
     adc_values.cell_voltage[2]=value2S-value1S;
     adc_values.cell_voltage[3]=value3S-value2S;
@@ -120,9 +121,12 @@ void Read_Cell_Voltage()
         switch (Get_Number_Of_Cells()) {
             case 2: 
                 adc_values.cell_voltage[0]=adc_values.cell_voltage[1]+adc_values.cell_voltage[2];
+                adc_values.cell_voltage[3]=0;
+                adc_values.cell_voltage[4]=0;
                 break;
             case 3: 
                 adc_values.cell_voltage[0]=adc_values.cell_voltage[1]+adc_values.cell_voltage[2]+adc_values.cell_voltage[3];
+                adc_values.cell_voltage[4]=0;
                 break;
             case 4: 
                 adc_values.cell_voltage[0]=adc_values.cell_voltage[1]+adc_values.cell_voltage[2]+adc_values.cell_voltage[3]+adc_values.cell_voltage[4];
@@ -234,17 +238,22 @@ void Cell_Voltage_Safety_Check()
 	battery_state.cell_over_voltage = over_voltage_temp;
 }
 
-
+uint32_t vol_error;
 void Battery_Connection_State()
 {
-    uint32_t vol_error;
-    vol_error = fabs( valueBAT-(adc_values.cell_voltage[1] + adc_values.cell_voltage[2] + adc_values.cell_voltage[3] + adc_values.cell_voltage[4]))*BATTERY_ADC_MULTIPLIER;
 
-	if ( valueBAT*BATTERY_ADC_MULTIPLIER > 2* VOLTAGE_CONNECTED_THRESHOLD && vol_error < 2*VOLTAGE_CONNECTED_THRESHOLD) {
+    vol_error = fabs( valueBAT*BATTERY_ADC_MULTIPLIER - (adc_values.cell_voltage[1] + adc_values.cell_voltage[2] + adc_values.cell_voltage[3] + adc_values.cell_voltage[4])*BATTERY_ADC_MULTIPLIER);
+	if ( valueBAT*BATTERY_ADC_MULTIPLIER > 2* VOLTAGE_CONNECTED_THRESHOLD ) {
 		battery_state.xt_connected = CONNECTED;
 	}
 	else {
 		battery_state.xt_connected = NOT_CONNECTED;
+	}
+	if ( battery_state.xt_connected == CONNECTED && vol_error > 1*VOLTAGE_CONNECTED_THRESHOLD ) {
+		Set_Error_State(XT30_VOLTAGE_ERROR);
+	}
+	else {
+		Clear_Error_State(XT30_VOLTAGE_ERROR);
 	}
 
 	Balance_Connection_State();
@@ -271,20 +280,37 @@ void Battery_Connection_State()
 		battery_state.requires_charging = 0;
 	}
 }
-float vol_num;
+
+
 void full_charger_Check(float vol, uint8_t CELL)
 {
-    vol_num = vol+vol_num;
     add++;
-    if(add == 1200) {
-        vol_num =vol_num/1200;
+    if(add==1){
+        volmax=vol;
+        volmin=vol;
+    }
+    volmax = vol>volmax ? vol:volmax;
+    volmin = vol<volmin ? vol:volmin;
+    if(add==2000 && volmin >= 4.185*CELL){
+        vol_num=volmax-volmin;
+        if(vol_num<0.02)   charger_flag=0;
+    }
+    if(volmin<=4.165*CELL)
+        charger_flag=1;
+    if(add > 2000)
+        add=0;
 
-        if(vol_num<=4.165*CELL && battery_state.requires_charging == 1){
-            charger_flag=1;
-        }else if(vol_num>4.185*CELL	&& battery_state.requires_charging == 0){
-            charger_flag=0;
-        }
-    }else if(add > 1200)  add=0;
+//    vol_num = vol+vol_num;
+//    add++;
+//    if(add == 1200) {
+//        vol_num =vol_num/1200;
+
+//        if(vol_num<=4.165*CELL && battery_state.requires_charging == 1){
+//            charger_flag=1;
+//        }else if(vol_num>=4.185*CELL	&& battery_state.requires_charging == 0){
+//            charger_flag=0;
+//        }
+//    }else if(add > 1200)  add=0;
 }
 
 uint8_t Get_Balancing_State()

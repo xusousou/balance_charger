@@ -244,7 +244,7 @@ void Regulator_OTG_EN(uint8_t otg_en) {
 		gpio_bit_reset(EN_OTG_PORT, EN_OTG_PIN);
 	}
 	else {
-		gpio_bit_reset(EN_OTG_PORT, EN_OTG_PIN);
+		gpio_bit_set(EN_OTG_PORT, EN_OTG_PIN);
 	}
 }
 
@@ -362,36 +362,37 @@ void Control_Charger_Output(float vol, uint8_t CELL)
     vol_min=cell_Num*1;
     CUR_min=64;
     if(cell_Num==4){
-        CUR_max=3000;
-    }else if(cell_Num==3){
         CUR_max=3500;
+    }else if(cell_Num==3){
+        CUR_max=4500;
     }else if(cell_Num==2){
-        CUR_max=2500;
+        CUR_max=3000;
     }else CUR_max=0;
    
     Balance_Connection_State();
 
-    if(vol>4.1*cell_Num && vol<=(vol_max-0.05) && cell_Num>1){
-        cell_CUR= vol * ((CUR_max-CUR_min)/((vol_max-0.05)-(4.1*cell_Num)));
-    }else if(vol>(vol_max-0.05) && vol<=vol_max && cell_Num>1){
+    if(vol>4.1*cell_Num && vol<=(vol_max-0.15) && cell_Num>1){
+        cell_CUR= vol * ((CUR_max-CUR_min)/((vol_max-0.15)-(4.1*cell_Num)));
+    }else if(vol>(vol_max-0.15) && vol<=vol_max && cell_Num>1){
         cell_CUR = CUR_min*cell_Num;
     }else if(vol>vol_min && vol<=4.1*cell_Num  && cell_Num>1){
         cell_CUR= CUR_max;
     }else{
         cell_CUR = 0;
     }
-    if( battery_state.balancing_enabled == 1 && cell_Num>1){
-        cell_CUR= CUR_min;
-    }
-     if(cell_CUR>3500){
-        cell_CUR=3500;
+     if(cell_CUR>4500){
+        cell_CUR=4500;
     }else if(cell_CUR<=0){
         cell_CUR=0;
     }
 
-    if(cell_Num>1 && Get_Error_State() == 0 && battery_state.cell_over_voltage == 0 && Get_Requires_Charging_State() == 1){
+    if(cell_Num>1 && Get_Error_State() == 0 && battery_state.cell_over_voltage == 0 && Get_Requires_Charging_State() == 1 && battery_state.balancing_enabled == 0 && charger_flag == 1){
         Set_Charge_Voltage(cell_Num);
         Set_Charge_Current(cell_CUR);
+        Regulator_HI_Z(0);
+    }else if(battery_state.cell_over_voltage == 0 && battery_state.balancing_enabled == 1 && cell_Num>1){
+        Set_Charge_Voltage(cell_Num);
+        Set_Charge_Current(CUR_min);
         Regulator_HI_Z(0);
     }else{
         Set_Charge_Voltage(0);

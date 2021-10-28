@@ -52,18 +52,17 @@ int main(void)
 {   
     systick_config(); 
     boardInit();
-    usart_data_transmit(USART0,0X10);  
 
-    osThreadDef(read_adc, ADC_Task, osPriorityAboveNormal, 0, 128);
+    osThreadDef(read_adc, ADC_Task, osPriorityHigh, 0, 128);
     myTask01Handle = osThreadCreate(osThread(read_adc), NULL);
 
     osThreadDef(Charger_regulator, Charger_Task, osPriorityHigh, 0, 128);
     myTask02Handle = osThreadCreate(osThread(Charger_regulator), NULL);
 
-    osThreadDef(RGB_LED, Led_Task, osPriorityAboveNormal, 0, 128);
+    osThreadDef(RGB_LED, Led_Task, osPriorityNormal, 0, 128);
     myTask03Handle = osThreadCreate(osThread(RGB_LED), NULL);
 
-    osThreadDef(NONE_TIME, None_Task, osPriorityHigh, 0, 128);
+    osThreadDef(NONE_TIME, None_Task, osPriorityNormal, 0, 128);
     myTask04Handle = osThreadCreate(osThread(NONE_TIME), NULL);
 
     /* start scheduler */
@@ -75,8 +74,10 @@ int main(void)
 
 void ADC_Task(void const * pvParameters)
 {
+    usart_data_transmit(USART0,0X10); 
     static int NUM;
     for( ;; ){ 
+        KEY_Scan();
         Read_Cell_Voltage();
         tempera = Get_MCU_Temperature();
         cell = Get_Number_Of_Cells();
@@ -98,7 +99,6 @@ void ADC_Task(void const * pvParameters)
 void Charger_Task(void const * pvParameters)
 {
     Regulator_HI_Z(1);
-    Regulator_OTG_EN(0);
     Query_Regulator_Connection();
 	regulator.connected = Query_Regulator_Connection();
     Regulator_Set_Charge_Option_0() ;
@@ -120,7 +120,7 @@ void Charger_Task(void const * pvParameters)
             Read_Charge_Status();
             Regulator_Read_ADC();
             timer_count++;
-            if (timer_count < 90) {
+            if (timer_count < 90 && Get_XT_Connection_State() == CONNECTED) {
                 Control_Charger_Output(adc_values.cell_voltage[0],cell);
             }else if (timer_count > 100){
                 timer_count = 0;
@@ -144,42 +144,33 @@ void Led_Task(void const * pvParameters)
     for( ;; ){
  		switch (KEY1_Flag) {
 		case 0: 
-            vTaskDelay(5);
             if ( (Get_Balance_Connection_State() != CONNECTED) && (Get_Error_State() == 0)) {
-                Color_decomposition(none,white);
-                LED_Control(ColorToColor(Triangular(NStep)));
-                vTaskDelay(5);
+                Colorful_gradient();
             }else if (Get_Error_State() != 0) {
                 LED_Control(none);
                 for (int a = 0; a < (Get_Error_State()); a++) {
-                    vTaskDelay(50);
+                    vTaskDelay(100);
                     LED_Control(red);
-                    vTaskDelay(50);
+                    vTaskDelay(100);
                     LED_Control(none);
                 }
-                vTaskDelay(5);
             }else {
                 /*充电状态指示*/
-                if (Get_XT_Connection_State() == CONNECTED && (Get_Balancing_State() == 0) && charger_flag == 0) {
+                if (Get_XT_Connection_State() == CONNECTED && Get_Balancing_State() == 0 && charger_flag == 0) {
                         chargerToColor(none, green,0,0);
                 }else if(Get_XT_Connection_State() == CONNECTED && charger_flag == 1) {
-                    vTaskDelay(10);
-                    if (Get_Requires_Charging_State() == 1) {
-                        chargerToColor(red,0xFEFF00,adc_values.cell_voltage[0],Get_Number_Of_Cells());
-                    }
-                }else if (Get_XT_Connection_State() != CONNECTED) {
-                    vTaskDelay(10);
-                    if (Get_Balancing_State() >= 1) {
-                        LED_Control(blue);
-                    }else{
-                        chargerToColor(none, blue,0,0);
-                    }
+                        chargerToColor(red,0xCD3200,adc_values.cell_voltage[0],Get_Number_Of_Cells());
                 }
             }
-            break;
-        case 1:
-            chargerToColor(none, orange,adc_values.cell_voltage[0],Get_Number_Of_Cells());
-            vTaskDelay(5);
+            if (Get_XT_Connection_State() != CONNECTED && Get_Balancing_State() >= 1) {
+               vTaskDelay(5);
+               if (Get_Balancing_State() >= 1) {
+                    LED_Control(blue);
+                }
+            }else if(Get_XT_Connection_State() != CONNECTED && Get_Balancing_State()==0){
+                  chargerToColor(none, blue,0,0);
+            }
+
             break;
         default:
             Control_Charger_Output(0,0);
@@ -187,20 +178,18 @@ void Led_Task(void const * pvParameters)
        }
        vTaskDelay(10);
     }
-        
 }
 
 void None_Task(void const * pvParameters)
 {
     for( ;; ){
-        KEY_Scan();
         if(KEY1_Flag)
         {
             if(adc_values.cell_voltage[0] >= cell*3.5){
                 Control_Charger_Output(0,0);
-                chargerToColor(red,0xFDFF00,adc_values.cell_voltage[0],Get_Number_Of_Cells());
+                chargerToColor(none,orange,adc_values.cell_voltage[0],Get_Number_Of_Cells());
                 Balancing_GPIO_Control(0xff);
-            }else if(adc_values.cell_voltage[0] > cell*3.3 && adc_values.cell_voltage[0] < cell*3.5){
+            }else if(Get_XT_Connection_State() == CONNECTED && adc_values.cell_voltage[0] > cell*3.3 && adc_values.cell_voltage[0] < cell*3.5){
                 Set_Charge_Voltage(cell);
                 Set_Charge_Current(64);
                 Regulator_HI_Z(0);
@@ -211,6 +200,7 @@ void None_Task(void const * pvParameters)
                 Balancing_GPIO_Control(0);
             }
         }
-        vTaskDelay(10);
+        Regulator_OTG_EN(0);
+        vTaskDelay(20);
     }
 }
