@@ -96,7 +96,7 @@ struct Regulator {
 #define MAX_CHARGING_POWER			65000
 #define NON_USB_PD_CHARGE_POWER		2500
 
-#define TEMP_THROTTLE_THRESH_C		40
+#define TEMP_THROTTLE_THRESH_C		80
 
 
 void BQ25703A_init(void);

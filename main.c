@@ -11,7 +11,6 @@
 #include <string.h>
 #include <stdint.h>
 #include "cmsis_os.h"
-
 #include "board.h"
 extern struct Regulator regulator;
 extern float valueBAT,value1S,value2S,value3S,value4S;
@@ -19,6 +18,7 @@ extern uint8_t cell;
 extern struct Adc adc_values;
 extern char KEY1,KEY1_Flag;
 extern unsigned char NStep; // RGB色彩需要几步，0-255.
+
 uint8_t charger_flag = 1;
 
 float tempera;
@@ -35,10 +35,10 @@ void None_Task(void const * argument);
 
 int fputc(int ch, FILE *f)
 {
-        /* 将Printf内容发往串口 */
-        usart_data_transmit(USART0, (unsigned char) ch);
-        while(RESET == usart_flag_get(USART0, USART_FLAG_TC));       
-        return (ch);
+    /* 将Printf内容发往串口 */
+    usart_data_transmit(USART0, (unsigned char) ch);
+    while(RESET == usart_flag_get(USART0, USART_FLAG_TC));       
+    return (ch);
 }
 
 /*!
@@ -77,7 +77,7 @@ void ADC_Task(void const * pvParameters)
     usart_data_transmit(USART0,0X10); 
     static int NUM;
     for( ;; ){ 
-        KEY_Scan();
+//        KEY_Scan();
         Read_Cell_Voltage();
         tempera = Get_MCU_Temperature();
         cell = Get_Number_Of_Cells();
@@ -93,7 +93,7 @@ void ADC_Task(void const * pvParameters)
 //        NUM++;
 //        printf("%d,%d,%1.3f,%1.3f,%1.3f,%1.3f,%1.3f \r\n",NUM,cell, adc_values.cell_voltage[0],adc_values.cell_voltage[1],adc_values.cell_voltage[2],adc_values.cell_voltage[3],adc_values.cell_voltage[4]);   
 //        if(NUM>10000) NUM=0;
-        vTaskDelay(1);
+        vTaskDelay(5);
     }
 }
 void Charger_Task(void const * pvParameters)
@@ -120,7 +120,7 @@ void Charger_Task(void const * pvParameters)
             Read_Charge_Status();
             Regulator_Read_ADC();
             timer_count++;
-            if (timer_count < 90 && Get_XT_Connection_State() == CONNECTED) {
+            if (timer_count < 90 && Get_XT_Connection_State() == CONNECTED && Get_MCU_Temperature() < TEMP_THROTTLE_THRESH_C) {
                 Control_Charger_Output(adc_values.cell_voltage[0],cell);
             }else if (timer_count > 100){
                 timer_count = 0;
@@ -135,7 +135,7 @@ void Charger_Task(void const * pvParameters)
           Control_Charger_Output(0,0);
             break;
        }
-       vTaskDelay(2);
+       vTaskDelay(20);
     }
 }
 
@@ -146,6 +146,7 @@ void Led_Task(void const * pvParameters)
 		case 0: 
             if ( (Get_Balance_Connection_State() != CONNECTED) && (Get_Error_State() == 0)) {
                 Colorful_gradient();
+                vTaskDelay(2);
             }else if (Get_Error_State() != 0) {
                 LED_Control(none);
                 for (int a = 0; a < (Get_Error_State()); a++) {
@@ -159,24 +160,22 @@ void Led_Task(void const * pvParameters)
                 if (Get_XT_Connection_State() == CONNECTED && Get_Balancing_State() == 0 && charger_flag == 0) {
                         chargerToColor(none, green,0,0);
                 }else if(Get_XT_Connection_State() == CONNECTED && charger_flag == 1) {
-                        chargerToColor(red,0xCD3200,adc_values.cell_voltage[0],Get_Number_Of_Cells());
-                }
-            }
-            if (Get_XT_Connection_State() != CONNECTED && Get_Balancing_State() >= 1) {
-               vTaskDelay(5);
-               if (Get_Balancing_State() >= 1) {
-                    LED_Control(blue);
-                }
-            }else if(Get_XT_Connection_State() != CONNECTED && Get_Balancing_State()==0){
+                        chargerToColor(red,green,adc_values.cell_voltage[0],Get_Number_Of_Cells());
+                }else if (Get_XT_Connection_State() != CONNECTED && Get_Balancing_State() >= 1) {
+                        vTaskDelay(5);
+                        if (Get_Balancing_State() >= 1) {
+                            LED_Control(blue);
+                        }
+                }else if(Get_XT_Connection_State() != CONNECTED && Get_Balancing_State()==0){
                   chargerToColor(none, blue,0,0);
+                }
             }
-
             break;
         default:
             Control_Charger_Output(0,0);
             break;
        }
-       vTaskDelay(10);
+       vTaskDelay(8);
     }
 }
 
@@ -199,8 +198,9 @@ void None_Task(void const * pvParameters)
                 chargerToColor(none,red,0,0);
                 Balancing_GPIO_Control(0);
             }
+            vTaskDelay(100);
         }
         Regulator_OTG_EN(0);
-        vTaskDelay(20);
+        vTaskDelay(1);
     }
 }

@@ -243,17 +243,17 @@ void get_low_filter(uint32_t *bat, uint32_t *s, uint32_t *ss, uint32_t *sss, uin
     static uint32_t  temperaturelastnum ,Vrefnum = 0,BATnum0 = 0,vol1num1 = 0,vol2num2 = 0,vol3num3 = 0,vol4num4 = 0;   
     static uint32_t  temperaturenum = 0,VrefLastnum,Lastnum0,Lastnum1,Lastnum2,Lastnum3,Lastnum4; //
     
-    BATnum0  = ( *bat * dPower ) + ( 1 - dPower ) * Lastnum0; //
-    vol1num1 = ( *s * dPower ) + ( 1 - dPower ) * Lastnum1; //
-    vol2num2 = ( *ss * dPower ) + ( 1 - dPower ) * Lastnum2; // 
-    vol3num3 = ( *sss * dPower ) + ( 1 - dPower ) * Lastnum3; //
-    vol4num4 = ( *ssss * dPower ) + ( 1 - dPower ) * Lastnum4; // 
+    BATnum0  = ( *bat * dPower ) + ( 1 - dPower ) * Lastnum0; 
+    vol1num1 = ( *s * dPower ) + ( 1 - dPower ) * Lastnum1; 
+    vol2num2 = ( *ss * dPower ) + ( 1 - dPower ) * Lastnum2; 
+    vol3num3 = ( *sss * dPower ) + ( 1 - dPower ) * Lastnum3; 
+    vol4num4 = ( *ssss * dPower ) + ( 1 - dPower ) * Lastnum4; 
 
-    Vrefnum      = ( vrefintnum * dPower ) + ( 1 - dPower ) * VrefLastnum; // 
+    Vrefnum      = ( vrefintnum * dPower ) + ( 1 - dPower ) * VrefLastnum; 
     VrefLastnum  = Vrefnum;
 
 
-    Lastnum0 = BATnum0;                                     //
+    Lastnum0 = BATnum0;    
     Lastnum1 = vol1num1; 
     Lastnum2 = vol2num2;
     Lastnum3 = vol3num3; 

@@ -2,7 +2,7 @@
 
 #ifdef  WS2812B
 
-uint32_t DataRGB[24];
+uint8_t DataRGB[24];
 #define Data0Time 0xC0
 #define Data1Time 0xFC
 #define RESTime   0x00
@@ -11,28 +11,30 @@ void rgbInit()
 {
     rcu_periph_clock_enable(RGB_CLK);
     rcu_periph_clock_enable(RCU_SPI0); 
-//    rcu_periph_clock_enable(RCU_DMA);
+    rcu_periph_clock_enable(RCU_DMA);
 
     gpio_af_set(RGB_PORT,GPIO_AF_0,RGB_PIN);
     gpio_mode_set(RGB_PORT,GPIO_MODE_AF,GPIO_PUPD_NONE,RGB_PIN);
     gpio_output_options_set(RGB_PORT,GPIO_OTYPE_PP,GPIO_OSPEED_50MHZ,RGB_PIN);
     gpio_bit_reset(RGB_PORT,RGB_PIN);   
 
-//    dma_parameter_struct  dma_init_struct;
-//    dma_struct_para_init(&dma_init_struct);
+    dma_parameter_struct  dma_init_struct;
+    dma_struct_para_init(&dma_init_struct);
 
-//    dma_deinit(DMA_CH2);   
-//    dma_init_struct.periph_addr = (uint32_t)&SPI_DATA(SPI0);//外设基地址
-//    dma_init_struct.memory_addr = (uint32_t)DataRGB ;//内存基地址
-//    dma_init_struct.direction = DMA_MEMORY_TO_PERIPHERAL;   //数据传输方向：内存到外设
-//    dma_init_struct.periph_width = DMA_PERIPHERAL_WIDTH_8BIT;//外设数据宽度8位
-//    dma_init_struct.memory_width = DMA_MEMORY_WIDTH_8BIT;   //内存数据宽度8位
-//    dma_init_struct.priority = DMA_PRIORITY_HIGH;           //DMA通道传输软件优先级
-//    dma_init_struct.number = 1;                     //DMA通道数据传输数量
-//    dma_init_struct.periph_inc =  DMA_PERIPH_INCREASE_DISABLE;//外设地址生成算法模式使能
-//    dma_init_struct.memory_inc =  DMA_MEMORY_INCREASE_ENABLE;//存储器地址生成算法模式失能
-//    dma_init(DMA_CH2, &dma_init_struct);                     //初始化DMA通道2	
-//    dma_channel_enable(DMA_CH2);
+    /* SPI0 transmit dma config */
+    dma_deinit(DMA_CH2);   
+    dma_init_struct.periph_addr = (uint32_t)&SPI_DATA(SPI0);//外设基地址
+    dma_init_struct.memory_addr = (uint32_t)DataRGB ;//内存基地址
+    dma_init_struct.direction = DMA_MEMORY_TO_PERIPHERAL;   //数据传输方向：内存到外设
+    dma_init_struct.periph_width = DMA_PERIPHERAL_WIDTH_8BIT;//外设数据宽度8位
+    dma_init_struct.memory_width = DMA_MEMORY_WIDTH_8BIT;   //内存数据宽度8位
+    dma_init_struct.priority = DMA_PRIORITY_HIGH;           //DMA通道传输软件优先级
+    dma_init_struct.number = 24;                     //DMA通道数据传输数量
+    dma_init_struct.periph_inc =  DMA_PERIPH_INCREASE_DISABLE;//外设地址生成算法模式使能
+    dma_init_struct.memory_inc =  DMA_MEMORY_INCREASE_ENABLE;//存储器地址生成算法模式失能
+    dma_init(DMA_CH2, &dma_init_struct);                     //初始化DMA通道2	
+    dma_channel_enable(DMA_CH2);
+    spi_dma_enable(SPI0, SPI_DMA_TRANSMIT);
 
 	spi_parameter_struct  spi_init_struct;
     spi_struct_para_init(&spi_init_struct);
@@ -48,15 +50,33 @@ void rgbInit()
     spi_init_struct.endian               = SPI_ENDIAN_MSB;
     spi_init(SPI0, &spi_init_struct);
     spi_enable(SPI0);
-//    spi_dma_enable(SPI0, SPI_DMA_TRANSMIT);
-    /* SPI0 transmit dma config */
+
+
+}
+
+void SPI_DMA_WriteReadByte(void)
+{	
+    dma_channel_disable(DMA_CH2);
+    dma_transfer_number_config(DMA_CH2,24);
+    dma_channel_enable(DMA_CH2);
+    spi_dma_enable(SPI0, SPI_DMA_TRANSMIT);
+    while( dma_flag_get( DMA_CH2, DMA_FLAG_FTF ) == RESET);
+    dma_flag_clear( DMA_CH2, DMA_FLAG_FTF ) ;
+    spi_dma_disable(SPI0, SPI_DMA_TRANSMIT);
+
+//	DMA_CHCTL(DMA_CH2) &= ~DMA_CHXCTL_CHEN;     /*失能DMA通道2*/
+//	DMA_CHCNT(DMA_CH2) = 24;               /*传输长度*/
+//	DMA_CHCTL(DMA_CH2) |= DMA_CHXCTL_CHEN;      /*使能DMA通道2*/
+//    SPI_CTL1(SPI0) |= (uint32_t)SPI_CTL1_DMATEN;
+//	while(RESET == dma_flag_get(DMA_CH2,DMA_FLAG_FTF));
+//    dma_flag_clear( DMA_CH2, DMA_FLAG_FTF ) ;
+//    SPI_CTL1(SPI0) &= ~SPI_CTL1_DMATEN; /*SPI DMA发送使能*/
 
 }
 
 void SetLed(uint32_t RgbData)
 {
 	uint8_t i=0,j=0,RGB_G=0,RGB_R=0,RGB_B=0;
-	
     // separation  RGB
     RGB_G = RgbData>>16 & 0XFF;
     RGB_R = RgbData>>8  & 0XFF;
@@ -72,17 +92,18 @@ void SetLed(uint32_t RgbData)
         RGB_B =RGB_B<<1;
     }
 	//send SPI data
-	for(i=0;i<24;i++)
-	{
-		spi_i2s_data_transmit(SPI0,DataRGB[i]);
-		while( spi_i2s_flag_get( SPI0, SPI_FLAG_TBE ) == RESET  && j<50)
-		{
-			j++;
-		}
-	}
-	spi_i2s_data_transmit(SPI0,0x00);
-}
+    SPI_DMA_WriteReadByte();
 
+//	for(i=0;i<24;i++)
+//	{
+//		spi_dma_flag_cleari2s_data_transmit(SPI0,DataRGB[i]);
+//		while( spi_i2s_flag_get( SPI0, SPI_FLAG_TBE ) == RESET  && j<50)
+//		{
+//			j++;
+//		}
+//	}
+//	spi_i2s_data_transmit(SPI0,0x00);
+}
 
 //void Charge_RGB_Control(float vol,uint8_t CELL)
 //{
@@ -112,21 +133,21 @@ void LED_Control(uint32_t color){
 /**************************颜色渐变函数***************************/
 /*从起始颜色---最终颜色*/
 
-unsigned char Red0, Green0, Blue0; // 起始三原色
-unsigned char Red1, Green1, Blue1; // 结果三原色
+uint8_t Red0, Green0, Blue0; // 起始三原色
+uint8_t Red1, Green1, Blue1; // 结果三原色
 int  RedMinus, GreenMinus, BlueMinus; // 颜色差（color1 - color0）
 float  RedStep, GreenStep, BlueStep; // 各色步进值
-unsigned char NStep; // 需要几步
+uint8_t NStep; // 需要几步
 unsigned long color; // 结果色
-unsigned char i ;
+uint8_t i ;
 
-unsigned char abs0(int num)//求绝对值
+uint8_t abs0(int num)//求绝对值
 {
     if(num>0) return num;
     num = -num;
     return (unsigned char) num;
 }
-unsigned char Triangular(int num)//三角波
+uint8_t Triangular(int num)//三角波
 {
     static  int x;
     float k;
@@ -147,7 +168,6 @@ unsigned char Triangular(int num)//三角波
     return i;
 }
 
-
 void chargerToColor(unsigned long color0, unsigned long color1, float bat, uint8_t cell)
 {
     Color_decomposition(color0,color1);
@@ -160,21 +180,21 @@ void chargerToColor(unsigned long color0, unsigned long color1, float bat, uint8
             if(bat <= 7){
                 i = 1;
             }else if(bat >7 && bat <= 8.5 ){
-                i=NStep - (8.5-bat)/1.5*NStep;
+                i = NStep - (8.5-bat)/1.5*NStep;
             }else  i = 255;       
         break;
         case 3: 
             if(bat <= 10.5){
                 i = 1;
             }else if(bat > 10.5 && bat <= 13){
-                i= NStep - (13-bat)/2.5*NStep;
+                i = NStep - (13-bat)/2.5*NStep;
             }else  i = 255;         
         break;
         case 4: 
             if(bat <= 14){
                 i = 1;
             }else if(bat > 14 && bat <= 17){
-                i= NStep - (17-bat)/3*NStep;
+                i = NStep - (17-bat)/3*NStep;
             }else  i = 255;         
         break;
         default:
@@ -182,7 +202,6 @@ void chargerToColor(unsigned long color0, unsigned long color1, float bat, uint8
     }
 //    printf("%d,%1.3f,%d \r\n",i,bat,NStep);
     LED_Control(ColorToColor(i));
-//    delay_us(100);
 }
 
 unsigned long  ColorToColor(uint8_t i)
