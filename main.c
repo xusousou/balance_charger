@@ -2,7 +2,7 @@
     \file    main.c
     \brief   Blance Charger
     
-    \version 2021-08-02, V1.0.0, firmware for GD32E23k6U6
+    \version 2021-08-02, V1.0.0, firmware for GD32E23k8U6
 */
 
 #include "gd32e23x.h"
@@ -17,7 +17,7 @@ extern float valueBAT,value1S,value2S,value3S,value4S;
 extern uint8_t cell;
 extern struct Adc adc_values;
 extern char KEY1,KEY1_Flag;
-extern unsigned char NStep; // RGB色彩需要几步，0-255.
+
 
 uint8_t charger_flag = 1;
 
@@ -105,7 +105,6 @@ void Charger_Task(void const * pvParameters)
     Regulator_Set_ADC_Option();
     uint8_t timer_count = 0;
     for( ;; ){
-
  		switch (KEY1_Flag) {
 		case 0: 
             //Check if power into regulator is okay
@@ -120,7 +119,7 @@ void Charger_Task(void const * pvParameters)
             Read_Charge_Status();
             Regulator_Read_ADC();
             timer_count++;
-            if (timer_count < 90 && Get_XT_Connection_State() == CONNECTED && Get_MCU_Temperature() < TEMP_THROTTLE_THRESH_C) {
+            if (timer_count < 90 && Get_Balance_Connection_State() == CONNECTED && Get_XT_Connection_State() == CONNECTED && Get_MCU_Temperature() < TEMP_THROTTLE_THRESH_C) {
                 Control_Charger_Output(adc_values.cell_voltage[0],cell);
             }else if (timer_count > 100){
                 timer_count = 0;
@@ -198,7 +197,7 @@ void None_Task(void const * pvParameters)
                 chargerToColor(none,red,0,0);
                 Balancing_GPIO_Control(0);
             }
-            vTaskDelay(100);
+            vTaskDelay(50);
         }
         Regulator_OTG_EN(0);
         vTaskDelay(1);

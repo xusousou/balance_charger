@@ -362,7 +362,7 @@ void Control_Charger_Output(float vol, uint8_t CELL)
     vol_min=cell_Num*1;
     CUR_min=64;
     if(cell_Num==4){
-        CUR_max=3500;
+        CUR_max=4000;
     }else if(cell_Num==3){
         CUR_max=4500;
     }else if(cell_Num==2){
@@ -371,15 +371,19 @@ void Control_Charger_Output(float vol, uint8_t CELL)
    
     Balance_Connection_State();
 
-    if(vol>4.1*cell_Num && vol<=(vol_max-0.15) && cell_Num>1){
-        cell_CUR= vol * ((CUR_max-CUR_min)/((vol_max-0.15)-(4.1*cell_Num)));
-    }else if(vol>(vol_max-0.15) && vol<=vol_max && cell_Num>1){
+    //充电电流调整
+    if(vol>4.0*cell_Num && vol<=(vol_max-(0.02*cell_Num)) && cell_Num>1){
+        cell_CUR= vol * ((CUR_max-CUR_min)/((vol_max-(0.02*cell_Num))-(4.0*cell_Num)));
+    }else if(vol>(vol_max-(0.02*cell_Num)) && vol<=vol_max && cell_Num>1){
         cell_CUR = CUR_min*cell_Num;
-    }else if(vol>vol_min && vol<=4.1*cell_Num  && cell_Num>1){
+    }else if(vol>3.0*cell_Num && vol<=4.0*cell_Num  && cell_Num>1){
         cell_CUR= CUR_max;
+    }else if(vol>vol_min && vol<=3.0*cell_Num  && cell_Num>1){
+        cell_CUR= CUR_max/5;
     }else{
         cell_CUR = 0;
     }
+
      if(cell_CUR>4500){
         cell_CUR=4500;
     }else if(cell_CUR<=0){
