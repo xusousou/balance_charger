@@ -291,13 +291,13 @@ void full_charger_Check(float vol, uint8_t CELL)
     }
     volmax = vol>volmax ? vol:volmax;
     volmin = vol<volmin ? vol:volmin;
-    if(add==1000 && volmin >= 4.185*CELL){
+    if(add==500 && volmin >= 4.185*CELL){
         vol_num=volmax-volmin;
-        if(vol_num<0.02)   charger_flag=0;
+        if(vol_num<0.02 && Get_Balancing_State()==0)   charger_flag=0;
     }
     if(volmin<=4.165*CELL)
         charger_flag=1;
-    if(add > 1000)
+    if(add > 500)
         add=0;
 
 //    vol_num = vol+vol_num;

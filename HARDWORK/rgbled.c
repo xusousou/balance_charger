@@ -131,8 +131,6 @@ void LED_Control(uint32_t color){
 
 
 /**************************颜色渐变函数***************************/
-/*从起始颜色---最终颜色*/
-
 uint8_t Red0, Green0, Blue0; // 起始三原色
 uint8_t Red1, Green1, Blue1; // 结果三原色
 int  RedMinus, GreenMinus, BlueMinus; // 颜色差（color1 - color0）
@@ -206,7 +204,6 @@ void chargerToColor(unsigned long color0, unsigned long color1, float bat, uint8
 
 unsigned long  ColorToColor(uint8_t i)
 {
-    // 渐变开始
     Red1 = Red0 + (int)(RedStep * i);
     Green1 = Green0 + (int)(GreenStep * i);
     Blue1 = Blue0 + (int)(BlueStep * i);
@@ -246,7 +243,7 @@ void Color_decomposition(unsigned long color0, unsigned long color1)
     GreenStep = (float)GreenMinus / NStep;
     BlueStep = (float)BlueMinus / NStep;
 }
-
+// 渐变开始
 uint16_t SE = 0;
 uint8_t bianhuan =1;
 void Colorful_gradient()
