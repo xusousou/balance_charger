@@ -49,6 +49,7 @@ void rgbInit()
     spi_init_struct.prescale             = SPI_PSC_8;
     spi_init_struct.endian               = SPI_ENDIAN_MSB;
     spi_init(SPI0, &spi_init_struct);
+    spi_fifo_access_size_config(SPI0, SPI_BYTE_ACCESS);	
     spi_enable(SPI0);
 
 
@@ -93,42 +94,11 @@ void SetLed(uint32_t RgbData)
     }
 	//send SPI data
     SPI_DMA_WriteReadByte();
-
-//	for(i=0;i<24;i++)
-//	{
-//		spi_dma_flag_cleari2s_data_transmit(SPI0,DataRGB[i]);
-//		while( spi_i2s_flag_get( SPI0, SPI_FLAG_TBE ) == RESET  && j<50)
-//		{
-//			j++;
-//		}
-//	}
-//	spi_i2s_data_transmit(SPI0,0x00);
 }
-
-//void Charge_RGB_Control(float vol,uint8_t CELL)
-//{
-//    uint32_t vol_RG;
-//    uint8_t R_value, G_value, vol_min, vol_max;
-//    vol_max=(CELL*4.20)*100;
-//    vol_min=(CELL*4.20-2.55)*100;
-
-//    if(vol < MIN_2SBAT_VOLTAGE && CELL>1)
-//    {
-//        SetLed(0x00ff00);
-//    }else if(vol > MIN_2SBAT_VOLTAGE && CELL>1 ){
-//       R_value = (vol_max-(vol*100));
-//       G_value = ((vol*100)-vol_min)*((vol*100)/vol_max);
-//       vol_RG |= G_value<<16;
-//       vol_RG |= R_value<<8;
-//       vol_RG |= 0x00;
-//       SetLed(vol_RG);
-//    }else SetLed(0x000000);
-//}
 
 void LED_Control(uint32_t color){
     SetLed(color);
 }
-
 
 /**************************颜色渐变函数***************************/
 uint8_t Red0, Green0, Blue0; // 起始三原色
@@ -137,7 +107,7 @@ int  RedMinus, GreenMinus, BlueMinus; // 颜色差（color1 - color0）
 float  RedStep, GreenStep, BlueStep; // 各色步进值
 uint8_t NStep; // 需要几步
 unsigned long color; // 结果色
-uint8_t i ;
+uint8_t Vstep,Tstep ;
 
 uint8_t abs0(int num)//求绝对值
 {
@@ -152,18 +122,18 @@ uint8_t Triangular(int num)//三角波
     x++;
     if(x<num){
         k=1;
-        i=x;
+        Tstep=x;
     }else if(x>=num && x<2*num){
         k=-1;
-        i=2*num-x;
+        Tstep=2*num-x;
     }else if(x>= 2*num || x < 0){
         x=0; 
         k=0;
-    }else if(i<0 || i>num ){
+    }else if(Tstep<0 || Tstep>num ){
         x=0;
-        i=0;
+        Tstep=0;
     }
-    return i;
+    return Tstep;
 }
 
 void chargerToColor(unsigned long color0, unsigned long color1, float bat, uint8_t cell)
@@ -172,34 +142,47 @@ void chargerToColor(unsigned long color0, unsigned long color1, float bat, uint8
  	switch (cell) 
     {
         case 0: 
-            Triangular(NStep);     
+            Triangular(NStep); 
+            LED_Control(ColorToColor(Tstep));    
         break;
         case 2: 
             if(bat <= 7){
-                i = 1;
+                Vstep = 1;
             }else if(bat >7 && bat <= 8.5 ){
-                i = NStep - (8.5-bat)/1.5*NStep;
-            }else  i = 255;       
+                Vstep = NStep - (8.5-bat)/1.5*NStep;
+            }else  Vstep = 255; 
+            ColorToColor(Vstep);  
+            Color_decomposition(0,color);
+            Triangular(NStep); 
+            LED_Control(ColorToColor(Tstep)); 
         break;
         case 3: 
             if(bat <= 10.5){
-                i = 1;
+                Vstep = 1;
             }else if(bat > 10.5 && bat <= 13){
-                i = NStep - (13-bat)/2.5*NStep;
-            }else  i = 255;         
+                Vstep = NStep - (13-bat)/2.5*NStep;
+            }else  Vstep = 255;   
+            ColorToColor(Vstep);  
+            Color_decomposition(0,color);
+            Triangular(NStep); 
+            LED_Control(ColorToColor(Tstep));       
         break;
         case 4: 
             if(bat <= 14){
-                i = 1;
+                Vstep = 1;
             }else if(bat > 14 && bat <= 17){
-                i = NStep - (17-bat)/3*NStep;
-            }else  i = 255;         
+                Vstep = NStep - (17-bat)/3*NStep;
+            }else  Vstep = 255;      
+            ColorToColor(Vstep);  
+            Color_decomposition(0,color);
+            Triangular(NStep); 
+            LED_Control(ColorToColor(Tstep));   
         break;
         default:
         break;
     }
 //    printf("%d,%1.3f,%d \r\n",i,bat,NStep);
-    LED_Control(ColorToColor(i));
+
 }
 
 unsigned long  ColorToColor(uint8_t i)

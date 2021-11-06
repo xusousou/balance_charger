@@ -154,17 +154,17 @@ void Led_Task(void const * pvParameters)
                 }
             }else {
                 /*充电状态指示*/
-                if (Get_XT_Connection_State() == CONNECTED && charger_flag == 0) {
-                        chargerToColor(none, green,0,0);
+                if(Get_XT_Connection_State() == CONNECTED && charger_flag == 0) {
+                        LED_Control(green);
                 }else if(Get_XT_Connection_State() == CONNECTED && charger_flag == 1) {
                         chargerToColor(red,green,adc_values.cell_voltage[0],Get_Number_Of_Cells());
-                }else if (Get_XT_Connection_State() != CONNECTED && Get_Balancing_State() >= 1) {
-                        vTaskDelay(5);
-                        if (Get_Balancing_State() >= 1) {
-                            LED_Control(blue);
+                }else if(Get_XT_Connection_State() != CONNECTED && Get_Balancing_State() >= 1) {
+                        vTaskDelay(2);
+                        if(Get_Balancing_State() >= 1) {
+                          chargerToColor(none, blue,0,0);
                         }
                 }else if(Get_XT_Connection_State() != CONNECTED && Get_Balancing_State()==0){
-                  chargerToColor(none, blue,0,0);
+                        LED_Control(blue);
                 }
             }
             break;
@@ -172,7 +172,7 @@ void Led_Task(void const * pvParameters)
             Control_Charger_Output(0,0);
             break;
        }
-       vTaskDelay(8);
+       vTaskDelay(10);
     }
 }
 

@@ -206,9 +206,7 @@ void adc_init(void)
     adc_external_trigger_config(ADC_REGULAR_CHANNEL,ENABLE);
 
 	adc_enable                        ();                                              // 使能ADC外设
-    delay_1ms(10);
-    delay_1ms(10);
-    delay_1ms(500);                                                                    // 延时非常重要
+    delay_1ms(10);                                                                   // 延时非常重要
 	adc_calibration_enable            ();                                              // ADC校准复位
     delay_1ms(10);
 	adc_dma_mode_enable               ();                                              // ADCx DMA请求使能

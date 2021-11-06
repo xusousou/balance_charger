@@ -30,7 +30,7 @@ void boardInit()
     LED_Control(blue);
     adc_init();
 
-    delay_1ms(500);
+    delay_1ms(1000);
     LED_Control(none);
     delay_1ms(1000);
 }

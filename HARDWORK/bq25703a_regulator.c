@@ -371,7 +371,7 @@ void Control_Charger_Output(float vol, uint8_t CELL)
     CUR_min=128;
     //充电电流上限。2S-3A；3S-4.5A；4S-4A
     if(cell_Num==4){
-        CUR_max=4000;
+        CUR_max=4500;
     }else if(cell_Num==3){
         CUR_max=4500;
     }else if(cell_Num==2){
@@ -382,7 +382,7 @@ void Control_Charger_Output(float vol, uint8_t CELL)
 
     //充电电流调整,平均电芯电压在1V-3V以最大电流的1/5进行充电；在3V-4V以最大电流充电；在4V-4.18V充电电流逐渐变小；在4.18V-4.215V电流为64mA
     if(vol>4.0*cell_Num && vol<=(vol_max-(0.02*cell_Num)) && cell_Num>1){
-        cell_CUR= ((4.0*cell_Num)-vol) * ((CUR_max-CUR_min)/((vol_max-(0.02*cell_Num))-(4.0*cell_Num))) + CUR_max + CUR_min;
+        cell_CUR= ((4.0*cell_Num)-vol) * ((CUR_max-CUR_min)/((vol_max-(0.02*cell_Num))-(4.0*cell_Num))) + CUR_max + 2*CUR_min;
     }else if(vol>(vol_max-(0.02*cell_Num)) && vol<=vol_max && cell_Num>1){
         cell_CUR = CUR_min;
     }else if(vol>3.0*cell_Num && vol<=4.0*cell_Num  && cell_Num>1){
@@ -394,8 +394,8 @@ void Control_Charger_Output(float vol, uint8_t CELL)
         cell_CUR = 0;
     }
     //电流限幅
-     if(cell_CUR>4500){
-        cell_CUR=4500;
+     if(cell_CUR>3000){
+        cell_CUR=3000;
     }else if(cell_CUR<=0){
         cell_CUR=0;
     }
