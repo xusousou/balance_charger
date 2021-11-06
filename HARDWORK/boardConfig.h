@@ -75,25 +75,26 @@
 #define CELL_BAT_VOL_CLK         RCU_GPIOA
 
 #else
-#define CELL_BAT_VOL_PIN         GPIO_PIN_2
-#define CELL_BAT_VOL_PORT        GPIOA
-#define CELL_BAT_VOL_CLK         RCU_GPIOA
 
-#define CELL_1S_VOL_PIN          GPIO_PIN_3
+#define CELL_1S_VOL_PIN          GPIO_PIN_2
 #define CELL_1S_VOL_PORT         GPIOA
 #define CELL_1S_VOL_CLK          RCU_GPIOA
 
-#define CELL_2S_VOL_PIN          GPIO_PIN_4
+#define CELL_2S_VOL_PIN          GPIO_PIN_3
 #define CELL_2S_VOL_PORT         GPIOA
 #define CELL_2S_VOL_CLK          RCU_GPIOA
 
-#define CELL_3S_VOL_PIN         GPIO_PIN_5
+#define CELL_3S_VOL_PIN         GPIO_PIN_4
 #define CELL_3S_VOL_PORT        GPIOA
 #define CELL_3S_VOL_CLK         RCU_GPIOA
 
-#define CELL_4S_VOL_PIN         GPIO_PIN_6
+#define CELL_4S_VOL_PIN         GPIO_PIN_5
 #define CELL_4S_VOL_PORT        GPIOA
 #define CELL_4S_VOL_CLK         RCU_GPIOA
+
+#define CELL_BAT_VOL_PIN         GPIO_PIN_6
+#define CELL_BAT_VOL_PORT        GPIOA
+#define CELL_BAT_VOL_CLK         RCU_GPIOA
 
 #endif
 

@@ -234,20 +234,20 @@ void Get_Adc_Val( uint32_t *bat, uint32_t *s, uint32_t *ss, uint32_t *sss, uint3
 
 	for(uint8_t i=0;i<70;)
 	{
-        *bat += ADC_Value[i++];  
 		*s   += ADC_Value[i++];   
 		*ss  += ADC_Value[i++];
 		*sss   += ADC_Value[i++];   
 		*ssss  += ADC_Value[i++];
+        *bat += ADC_Value[i++];  
         temperature += ADC_Value[i++];
         vrefintnum += ADC_Value[i++];
     } 
 
-    *bat = *bat/10;
     *s= *s/10;
     *ss= *ss/10;
     *sss= *sss/10;
     *ssss= *ssss/10;
+    *bat = *bat/10;
     temperature =temperature/10;
     vrefintnum = vrefintnum/10;
 }
@@ -293,7 +293,7 @@ void get_low_filter(uint32_t *bat, uint32_t *s, uint32_t *ss, uint32_t *sss, uin
     * @描述       获取电池或某片电芯电压      
     * @传入参数   电池电芯片数
     * @传出参数   无
-    * @返回值     所需要的某片电芯电压或电池电压
+    * @返回值     所需要的某片电芯电压或电池总电压
     */
 uint32_t Get_Cell_Voltage(uint8_t cell_number) {
 	if (cell_number > 4) {
