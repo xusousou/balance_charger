@@ -1,5 +1,14 @@
-#ifndef BATTERY_H_
-#define BATTERY_H_
+/**
+  ******************************************************************************
+  *	文件: battery.h
+  * 描述: 
+  ******************************************************************************
+  * @attention
+  ******************************************************************************
+**/
+
+#ifndef __BATTERY_H_
+#define __BATTERY_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -16,30 +25,6 @@ struct Battery {
 	uint8_t cell_over_voltage;
 	uint8_t cell_balance_bitmask;
 };
-
-
-
-/**********************************************************************************************************/
-//#define MAX_CELL_VOLTAGE_SAFE_LIMIT	    4.2090
-//#define MIN_CELL_VOLTAGE_SAFE_LIMIT	    1.5000
-
-//#define MAX_CELL_FULL_VOLTAGE_CHARGER	    4.2090
-//#define MIN_CELL_FULL_VOLTAGE_CHARGER	    4.1790
-
-//#define CELL_VOLTAGE_PRECISION      0.005
-
-//#define MAX_1SBAT_VOLTAGE	    4.2090
-//#define MIN_1SBAT_VOLTAGE	    3.3000
-
-//#define MAX_2SBAT_VOLTAGE	    8.4090
-//#define MIN_2SBAT_VOLTAGE	    4.2000
-
-//#define MAX_3SBAT_VOLTAGE	    12.6090
-//#define MIN_3SBAT_VOLTAGE	    6.3000
-
-//#define MAX_4SBAT_VOLTAGE	    16.8090
-//#define MIN_4SBAT_VOLTAGE	    8.4000
-
 
 #define BATTERY_ADC_MULTIPLIER 		10000000
 #define VOLTAGE_CONNECTED_THRESHOLD			(uint32_t)( 1.0 * BATTERY_ADC_MULTIPLIER )
@@ -66,12 +51,11 @@ void Cell_Voltage_Safety_Check(void);
 void Balance_Battery(void);
 void full_charger_Check(float vol, uint8_t CELL);
 
-/**********************************************************************************************************/
-
 
 uint8_t Get_Balancing_State();
 uint8_t Get_Requires_Charging_State();
 uint8_t Get_Number_Of_Cells();
 uint8_t Get_XT_Connection_State();
 uint8_t Get_Balance_Connection_State();
+
 #endif

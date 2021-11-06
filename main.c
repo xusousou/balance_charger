@@ -1,16 +1,14 @@
-/*!
-    \file    main.c
-    \brief   Blance Charger
-    
-    \version 2021-08-02, V1.0.0, firmware for GD32E23k8U6
+/****************************************************************************
+* Copyright (C), 
+* 文件名: main.c
+* 内容简述：
 */
-
-#include "gd32e23x.h"
-#include "systick.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
 #include "cmsis_os.h"
+#include "gd32e23x.h"
+#include "systick.h"
 #include "board.h"
 extern struct Regulator regulator;
 extern float valueBAT,value1S,value2S,value3S,value4S;
@@ -18,9 +16,7 @@ extern uint8_t cell;
 extern struct Adc adc_values;
 extern char KEY1,KEY1_Flag;
 
-
 uint8_t charger_flag = 1;
-
 float tempera;
 
 osThreadId myTask01Handle;

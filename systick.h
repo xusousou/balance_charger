@@ -34,8 +34,8 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
 OF SUCH DAMAGE.
 */
 
-#ifndef SYS_TICK_H
-#define SYS_TICK_H
+#ifndef __SYS_TICK_H
+#define __SYS_TICK_H
 
 #include <stdint.h>
 

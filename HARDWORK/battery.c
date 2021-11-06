@@ -1,14 +1,23 @@
+/**
+  ******************************************************************************
+  *	文件: battery.c 
+  * 描述: 
+  ******************************************************************************
+  * @attention
+  ******************************************************************************
+**/
+
 #include "battery.h"
 
 extern struct Adc adc_values;
 extern uint32_t temperature, vrefintnum;
 extern uint8_t charger_flag;
+
 volatile struct Battery battery_state;
 static uint8_t cell_connected_bitmask = 0;
 float valueBAT,value1S,value2S,value3S,value4S;
-uint32_t vol_1s, vol_2s, vol_3s, vol_4s, vol_bat;   //uint16_t ADC_1, ADC_2, ADC_4;对应的adc通道顺序
+uint32_t vol_1s, vol_2s, vol_3s, vol_4s, vol_bat;
 uint8_t cell;
-
 float vol_num,volmax,volmin;
 static uint32_t add;
 
@@ -96,7 +105,14 @@ void Read_Cell_Voltage()
     cell_Select(2);
 }
 #else
-//获取电池电压
+
+/****
+    * @函数名     Read_Cell_Voltage 
+    * @描述       采样值转换电压值      
+    * @传入参数   无
+    * @传出参数   无
+    * @返回值     无
+    */
 void Read_Cell_Voltage()
 {
     /*ADC数据处理*/      
@@ -104,7 +120,6 @@ void Read_Cell_Voltage()
     get_low_filter(&vol_bat,&vol_1s,&vol_2s,&vol_3s,&vol_4s);
 
     adc_values.vrefint =4096 *1.200/vrefintnum;
-//    adc_values.vrefint =3.335;
     adc_values.temperature = ((1450- (temperature *adc_values.vrefint*1000/4096))/(4300/1000))+25;
 
     valueBAT = (float)(vol_bat *  adc_values.vrefint/4096)*(1200+5360)/1200;
@@ -117,30 +132,36 @@ void Read_Cell_Voltage()
     adc_values.cell_voltage[2]=value2S-value1S;
     adc_values.cell_voltage[3]=value3S-value2S;
     adc_values.cell_voltage[4]=value4S-value3S;
-//    if(Get_XT_Connection_State() == CONNECTED){
-        switch (Get_Number_Of_Cells()) {
-            case 2: 
-                adc_values.cell_voltage[0]=adc_values.cell_voltage[1]+adc_values.cell_voltage[2];
-                adc_values.cell_voltage[3]=0;
-                adc_values.cell_voltage[4]=0;
-                break;
-            case 3: 
-                adc_values.cell_voltage[0]=adc_values.cell_voltage[1]+adc_values.cell_voltage[2]+adc_values.cell_voltage[3];
-                adc_values.cell_voltage[4]=0;
-                break;
-            case 4: 
-                adc_values.cell_voltage[0]=adc_values.cell_voltage[1]+adc_values.cell_voltage[2]+adc_values.cell_voltage[3]+adc_values.cell_voltage[4];
-                break;
-            default:
-                adc_values.cell_voltage[0]=valueBAT;
-                break;
-            }
-//    }
 
+    switch (Get_Number_Of_Cells()) 
+	{
+        case 2: 
+            adc_values.cell_voltage[0]=adc_values.cell_voltage[1]+adc_values.cell_voltage[2];
+            adc_values.cell_voltage[3]=0;
+            adc_values.cell_voltage[4]=0;
+            break;
+        case 3: 
+            adc_values.cell_voltage[0]=adc_values.cell_voltage[1]+adc_values.cell_voltage[2]+adc_values.cell_voltage[3];
+            adc_values.cell_voltage[4]=0;
+            break;
+        case 4: 
+            adc_values.cell_voltage[0]=adc_values.cell_voltage[1]+adc_values.cell_voltage[2]+adc_values.cell_voltage[3]+adc_values.cell_voltage[4];
+            break;
+        default:
+            adc_values.cell_voltage[0]=valueBAT;
+            break;
+    }
 }
 
 #endif
 
+/****
+    * @函数名     Balance_Connection_State 
+    * @描述       平衡头连接状态检测      
+    * @传入参数   无
+    * @传出参数   无
+    * @返回值     无
+    */
 void Balance_Connection_State(void)
 {
 if (( value4S*BATTERY_ADC_MULTIPLIER  > VOLTAGE_CONNECTED_THRESHOLD ) && ( Get_Cell_Voltage(4)  > VOLTAGE_CONNECTED_THRESHOLD )) {
@@ -211,8 +232,13 @@ if (( value4S*BATTERY_ADC_MULTIPLIER  > VOLTAGE_CONNECTED_THRESHOLD ) && ( Get_C
 	}
 }
 
-
-//电池欠压、超压检测
+/****
+    * @函数名     Cell_Voltage_Safety_Check 
+    * @描述       电池电芯电压欠压、超压检测     
+    * @传入参数   无
+    * @传出参数   无
+    * @返回值     无
+    */
 void Cell_Voltage_Safety_Check()
 {
 	uint8_t over_voltage_temp = 0;
@@ -238,9 +264,16 @@ void Cell_Voltage_Safety_Check()
 	battery_state.cell_over_voltage = over_voltage_temp;
 }
 
-uint32_t vol_error;
+/****
+    * @函数名     Battery_Connection_State 
+    * @描述       电池连接状态检测    
+    * @传入参数   无
+    * @传出参数   无
+    * @返回值     无
+    */
 void Battery_Connection_State()
 {
+	uint32_t vol_error;
 
     vol_error = fabs( valueBAT*BATTERY_ADC_MULTIPLIER - (adc_values.cell_voltage[1] + adc_values.cell_voltage[2] + adc_values.cell_voltage[3] + adc_values.cell_voltage[4])*BATTERY_ADC_MULTIPLIER);
 	if ( valueBAT*BATTERY_ADC_MULTIPLIER > 2* VOLTAGE_CONNECTED_THRESHOLD ) {
@@ -257,86 +290,118 @@ void Battery_Connection_State()
 	}
 
 	Balance_Connection_State();
-
-//	MCU_Temperature_Safety_Check();
 	Cell_Voltage_Safety_Check();
 
     if(Get_Balancing_State() == 0){
         Balancing_GPIO_Control(0);
     }
-	//Only update the balancing state if charging is off
+
 	if (Get_Regulator_Charging_State() == 0 || Get_Balancing_State() != 0) {
 		Balance_Battery();
 	}
+
 	if ((battery_state.xt_connected == CONNECTED) && (battery_state.balance_port_connected == CONNECTED)){
 		if (Get_Cell_Voltage(0) < (battery_state.number_of_cells * CELL_VOLTAGE_TO_ENABLE_CHARGING)) {
 			battery_state.requires_charging = 1;
-		}
-		else {
+		}else {
 			battery_state.requires_charging = 0;
 		}
-	}
-    else {
+	}else {
 		battery_state.requires_charging = 0;
 	}
 }
 
-
+/****
+    * @函数名     full_charger_Check 
+    * @描述       电池充电完成状态检测     
+    * @传入参数   电池电压，电芯极数
+    * @传出参数   无
+    * @返回值     无
+    */
 void full_charger_Check(float vol, uint8_t CELL)
 {
     add++;
+
     if(add==1){
         volmax=vol;
         volmin=vol;
     }
+
     volmax = vol>volmax ? vol:volmax;
     volmin = vol<volmin ? vol:volmin;
+
     if(add==500 && volmin >= 4.185*CELL){
         vol_num=volmax-volmin;
-        if(vol_num<0.02 && Get_Balancing_State()==0)   charger_flag=0;
+        if(vol_num<0.02 && Get_Balancing_State()==0) 
+			charger_flag=0;
     }
+
     if(volmin<=4.165*CELL)
-        charger_flag=1;
-    if(add > 500)
-        add=0;
+		charger_flag=1;
 
-//    vol_num = vol+vol_num;
-//    add++;
-//    if(add == 1200) {
-//        vol_num =vol_num/1200;
-
-//        if(vol_num<=4.165*CELL && battery_state.requires_charging == 1){
-//            charger_flag=1;
-//        }else if(vol_num>=4.185*CELL	&& battery_state.requires_charging == 0){
-//            charger_flag=0;
-//        }
-//    }else if(add > 1200)  add=0;
+    if(add > 500) 
+		add=0;
 }
 
+/****
+    * @函数名     Get_Balancing_State 
+    * @描述       获取电芯平衡状态     
+    * @传入参数   无
+    * @传出参数   无
+    * @返回值     需要平衡的电芯
+    */
 uint8_t Get_Balancing_State()
 {
-    if (battery_state.balancing_enabled == 1) {
+    if (battery_state.balancing_enabled == 1){
 		return battery_state.cell_balance_bitmask;
 	}
 	return 0;
 }
 
+/****
+    * @函数名     Get_Balance_Connection_State 
+    * @描述       获取平衡头连接状态     
+    * @传入参数   无
+    * @传出参数   无
+    * @返回值     连接状态；CONNECTED = 1；NOT_CONNECTED = 0；
+    */
 uint8_t Get_Balance_Connection_State()
 {
 	return battery_state.balance_port_connected;
 }
 
+/****
+    * @函数名     Get_Requires_Charging_State 
+    * @描述       获取请求充电状态     
+    * @传入参数   无
+    * @传出参数   无
+    * @返回值     请求充电：1；无需充电：0；
+    */
 uint8_t Get_Requires_Charging_State()
 {
 	return battery_state.requires_charging;
 }
 
+/****
+    * @函数名     Get_Number_Of_Cells 
+    * @描述       获取电芯数量     
+    * @传入参数   无
+    * @传出参数   无
+    * @返回值     0，1 -- 1S，2 -- 2S，3 -- 3S，4 -- 4S
+    */
 uint8_t Get_Number_Of_Cells()
 {
     Balance_Connection_State();
 	return battery_state.number_of_cells;
 }
 
+/****
+    * @函数名     Get_XT_Connection_State 
+    * @描述       获取XT30头连接状态     
+    * @传入参数   无
+    * @传出参数   无
+    * @返回值     连接状态；CONNECTED = 1；NOT_CONNECTED = 0；
+    */
 uint8_t Get_XT_Connection_State()
 {
 	return battery_state.xt_connected;

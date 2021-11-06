@@ -1,6 +1,14 @@
+/**
+  ******************************************************************************
+  * 文件: bq25703a_regulator.c
+  * 描述: 
+  ******************************************************************************
+  * @attention
+  ******************************************************************************
+**/
+
 #include "bq25703a_regulator.h"
 #include "iic.h"
-
 
 struct Regulator regulator;
 extern volatile struct Battery battery_state;
@@ -374,7 +382,7 @@ void Control_Charger_Output(float vol, uint8_t CELL)
 
     //充电电流调整,平均电芯电压在1V-3V以最大电流的1/5进行充电；在3V-4V以最大电流充电；在4V-4.18V充电电流逐渐变小；在4.18V-4.215V电流为64mA
     if(vol>4.0*cell_Num && vol<=(vol_max-(0.02*cell_Num)) && cell_Num>1){
-        cell_CUR= ((4.0*cell_Num)-vol) * ((CUR_max-CUR_min)/((vol_max-(0.02*cell_Num))-(4.0*cell_Num))) +CUR_max ;
+        cell_CUR= ((4.0*cell_Num)-vol) * ((CUR_max-CUR_min)/((vol_max-(0.02*cell_Num))-(4.0*cell_Num))) + CUR_max + CUR_min;
     }else if(vol>(vol_max-(0.02*cell_Num)) && vol<=vol_max && cell_Num>1){
         cell_CUR = CUR_min;
     }else if(vol>3.0*cell_Num && vol<=4.0*cell_Num  && cell_Num>1){
@@ -392,7 +400,9 @@ void Control_Charger_Output(float vol, uint8_t CELL)
         cell_CUR=0;
     }
 
-    if(cell_Num>1 && Get_Error_State() == 0 && battery_state.cell_over_voltage == 0 && Get_Requires_Charging_State() == 1 && battery_state.balancing_enabled == 0 && charger_flag == 1){
+    if(cell_Num>1 && Get_Error_State() == 0 && 
+		battery_state.cell_over_voltage == 0 && Get_Requires_Charging_State() == 1 && 
+		battery_state.balancing_enabled == 0 && charger_flag == 1){
         Set_Charge_Voltage(cell_Num);
         Set_Charge_Current(cell_CUR);
         Regulator_HI_Z(0);
