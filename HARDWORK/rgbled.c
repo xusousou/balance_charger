@@ -24,7 +24,7 @@ void rgbInit()
     /* SPI0 transmit dma config */
     dma_deinit(DMA_CH2);   
     dma_init_struct.periph_addr = (uint32_t)&SPI_DATA(SPI0);//外设基地址
-    dma_init_struct.memory_addr = (uint32_t)DataRGB ;//内存基地址
+    dma_init_struct.memory_addr = (uint32_t)DataRGB;//内存基地址
     dma_init_struct.direction = DMA_MEMORY_TO_PERIPHERAL;   //数据传输方向：内存到外设
     dma_init_struct.periph_width = DMA_PERIPHERAL_WIDTH_8BIT;//外设数据宽度8位
     dma_init_struct.memory_width = DMA_MEMORY_WIDTH_8BIT;   //内存数据宽度8位
@@ -44,14 +44,13 @@ void rgbInit()
     spi_init_struct.trans_mode           = SPI_TRANSMODE_FULLDUPLEX;
     spi_init_struct.device_mode          = SPI_MASTER;
     spi_init_struct.frame_size           = SPI_FRAMESIZE_8BIT;
-    spi_init_struct.clock_polarity_phase = SPI_CK_PL_LOW_PH_2EDGE;
+    spi_init_struct.clock_polarity_phase = SPI_CK_PL_HIGH_PH_2EDGE;
     spi_init_struct.nss                  = SPI_NSS_SOFT;
     spi_init_struct.prescale             = SPI_PSC_8;
     spi_init_struct.endian               = SPI_ENDIAN_MSB;
     spi_init(SPI0, &spi_init_struct);
-    spi_fifo_access_size_config(SPI0, SPI_BYTE_ACCESS);	
+    spi_fifo_access_size_config(SPI0, SPI_BYTE_ACCESS);
     spi_enable(SPI0);
-
 
 }
 

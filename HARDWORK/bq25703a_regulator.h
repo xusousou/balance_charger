@@ -105,7 +105,7 @@ struct Regulator {
 #define MAX_CHARGING_POWER			65000
 #define NON_USB_PD_CHARGE_POWER		2500
 
-#define TEMP_THROTTLE_THRESH_C		80
+#define TEMP_THROTTLE_THRESH_C		70
 
 
 void BQ25703A_init(void);
@@ -113,7 +113,6 @@ uint8_t IIC_ReadOneByte(uint16_t ReadAddr);
 void I2C_Read_Register(uint16_t ReadAddr,uint8_t data[],uint8_t len);
 void I2C_Write_Register(uint16_t WriteAddr,uint8_t *DataToWrite);
 void I2C_Write_Two_Byte_Register(uint8_t WriteAddr, uint8_t lsb_data, uint8_t msb_data);
-
 
 uint8_t Get_Regulator_Connection_State(void);
 uint8_t Get_Regulator_Charging_State(void);

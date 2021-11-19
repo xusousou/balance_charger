@@ -119,8 +119,8 @@ void Read_Cell_Voltage()
     Get_Adc_Val(&vol_bat,&vol_1s,&vol_2s,&vol_3s,&vol_4s);
     get_low_filter(&vol_bat,&vol_1s,&vol_2s,&vol_3s,&vol_4s);
 
-//    adc_values.vrefint =((4096 *1.200/vrefintnum) + 3.3)/2;
-    adc_values.vrefint = 3.30 ;
+//    adc_values.vrefint =(4096 *1.20/vrefintnum);
+    adc_values.vrefint = 3.305;
     adc_values.temperature = ((1450- (temperature *adc_values.vrefint*1000/4096))/(4300/1000))+25;
 
     valueBAT = (float)(vol_bat *  adc_values.vrefint/4096)*(1200+5360)/1200;
@@ -302,7 +302,7 @@ void Battery_Connection_State()
 	}
 
 	if ((battery_state.xt_connected == CONNECTED) && (battery_state.balance_port_connected == CONNECTED)){
-		if (Get_Cell_Voltage(0) < (battery_state.number_of_cells * CELL_VOLTAGE_TO_ENABLE_CHARGING)) {
+		if (Get_Cell_Voltage(0) < (battery_state.number_of_cells * CELL_VOLTAGE_TO_ENABLE_CHARGING)+0.005) {
 			battery_state.requires_charging = 1;
 		}else {
 			battery_state.requires_charging = 0;
@@ -331,7 +331,7 @@ void full_charger_Check(float vol, uint8_t CELL)
     volmax = vol>volmax ? vol:volmax;
     volmin = vol<volmin ? vol:volmin;
 
-    if(add==800 && volmin >= 4.185*CELL){
+    if(add==1000 && volmin >= 4.184*CELL){
         vol_num=volmax-volmin;
         if(vol_num<0.02 && Get_Balancing_State()==0) 
 			charger_flag=0;
@@ -340,7 +340,7 @@ void full_charger_Check(float vol, uint8_t CELL)
     if(volmin<=4.165*CELL)
 		charger_flag=1;
 
-    if(add > 800) 
+    if(add > 1000) 
 		add=0;
 }
 

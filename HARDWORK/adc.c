@@ -205,11 +205,13 @@ void adc_init(void)
 	adc_external_trigger_source_config(ADC_REGULAR_CHANNEL, ADC_EXTTRIG_REGULAR_NONE); // 配置ADC外部触发源是软件触发。
     adc_external_trigger_config(ADC_REGULAR_CHANNEL,ENABLE);
 
+    delay_1ms(10);
 	adc_enable                        ();                                              // 使能ADC外设
-    delay_1ms(10);                                                                   // 延时非常重要
+    delay_1ms(100);                                                                   // 延时非常重要
 	adc_calibration_enable            ();                                              // ADC校准复位
     delay_1ms(10);
 	adc_dma_mode_enable               ();                                              // ADCx DMA请求使能
+    delay_1ms(10);
 	adc_software_trigger_enable       (ADC_REGULAR_CHANNEL);                           // ADC软件触发使能。
 }
 
@@ -261,7 +263,7 @@ void get_low_filter(uint32_t *bat, uint32_t *s, uint32_t *ss, uint32_t *sss, uin
 {
     float dPower = 0.1; 
     static uint32_t  temperaturelastnum ,Vrefnum = 0,BATnum0 = 0,vol1num1 = 0,vol2num2 = 0,vol3num3 = 0,vol4num4 = 0;   
-    static uint32_t  temperaturenum = 0,VrefLastnum,Lastnum0,Lastnum1,Lastnum2,Lastnum3,Lastnum4; //
+    static uint32_t  temperaturenum = 0,VrefLastnum,Lastnum0,Lastnum1,Lastnum2,Lastnum3,Lastnum4; 
     
     BATnum0  = ( *bat * dPower ) + ( 1 - dPower ) * Lastnum0; 
     vol1num1 = ( *s * dPower ) + ( 1 - dPower ) * Lastnum1; 

@@ -12,12 +12,12 @@
 void boardInit()
 {
 //    SW_Init();
+    rgbInit();
     key_init();
     i2c_init();
     balance_Init();
-    rgbInit();
 
-    delay_1ms(10);
+    delay_1ms(1000);
     LED_Control(red);
     USART_Init();
 

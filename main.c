@@ -73,7 +73,7 @@ void ADC_Task(void const * pvParameters)
     usart_data_transmit(USART0,0X10); 
     static int NUM;
     for( ;; ){ 
-//        KEY_Scan();
+        /* KEY_Scan(); */
         Read_Cell_Voltage();
         tempera = Get_MCU_Temperature();
         cell = Get_Number_Of_Cells();
@@ -86,11 +86,11 @@ void ADC_Task(void const * pvParameters)
 
             break;
         }
-//        NUM++;
-//        if(NUM>=10){
-//            NUM=0;
-//            printf("%d,%d,%1.3f,%1.3f,%1.3f,%1.3f,%1.3f \r\n",NUM,cell, adc_values.cell_voltage[0],adc_values.cell_voltage[1],adc_values.cell_voltage[2],adc_values.cell_voltage[3],adc_values.cell_voltage[4]);   
-//        }
+        NUM++;
+        if(NUM>=10){
+            NUM=0;
+            printf("%d,%d,%1.3f,%1.3f,%1.3f,%1.3f,%1.3f,%1.3f \r\n",NUM,cell, adc_values.cell_voltage[0],adc_values.cell_voltage[1],adc_values.cell_voltage[2],adc_values.cell_voltage[3],adc_values.cell_voltage[4],adc_values.vrefint);   
+        }
         vTaskDelay(5);
     }
 }
@@ -105,7 +105,7 @@ void Charger_Task(void const * pvParameters)
     for( ;; ){
  		switch (KEY1_Flag) {
 		case 0: 
-            //Check if power into regulator is okay
+            /*检查电源管理芯片状态*/
             if (Read_Charge_Okay() != 1) {
                 Set_Error_State(VOLTAGE_INPUT_ERROR);
             }else if ((Get_Error_State() & VOLTAGE_INPUT_ERROR) == VOLTAGE_INPUT_ERROR) {
@@ -172,7 +172,7 @@ void Led_Task(void const * pvParameters)
             Control_Charger_Output(0,0);
             break;
        }
-       vTaskDelay(10);
+       vTaskDelay(20);
     }
 }
 
@@ -197,7 +197,6 @@ void None_Task(void const * pvParameters)
             }
             vTaskDelay(50);
         }
-        Regulator_OTG_EN(0);
-        vTaskDelay(1);
+        vTaskDelay(50);
     }
 }
