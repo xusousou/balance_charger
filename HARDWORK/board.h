@@ -28,6 +28,9 @@
 #include "battery.h"
 #include "key.h"
 #include "error.h"
+#include "husb238_iic.h"
+#include "husb238_regulator.h"
+
 
 void boardInit(void);
 

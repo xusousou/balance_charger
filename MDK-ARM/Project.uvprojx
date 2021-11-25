@@ -458,6 +458,16 @@
               <FileType>1</FileType>
               <FilePath>..\HARDWORK\key.c</FilePath>
             </File>
+            <File>
+              <FileName>husb238_iic.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWORK\husb238_iic.c</FilePath>
+            </File>
+            <File>
+              <FileName>husb238_regulator.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWORK\husb238_regulator.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

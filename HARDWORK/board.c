@@ -11,13 +11,11 @@
 
 void boardInit()
 {
-//    SW_Init();
     rgbInit();
     key_init();
     i2c_init();
+    HUSB238_i2c_init();
     balance_Init();
-
-    delay_1ms(1000);
     LED_Control(red);
     USART_Init();
 

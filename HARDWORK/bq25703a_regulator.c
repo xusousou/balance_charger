@@ -364,7 +364,7 @@ void Control_Charger_Output(float vol, uint8_t CELL)
 {
     uint8_t cell_Num;
 
-    float  CUR_value, CUR_min, CUR_max,vol_min,vol_max;
+    float  CUR_value, CUR_min, CUR_max, vol_min, vol_max, power;
     cell_Num =CELL;
     vol_max=cell_Num*4.200;
     vol_min=cell_Num*1;
@@ -393,8 +393,9 @@ void Control_Charger_Output(float vol, uint8_t CELL)
         cell_CUR = 0;
     }
     /*功率限幅60W*/
-    if(cell_CUR >= ((60/vol)*1000))
-        cell_CUR = ((60/vol)*1000); 
+    power = Get_HUSB238_Input_Power();
+    if(cell_CUR >= ((power/vol)*1000))
+        cell_CUR = ((power/vol)*1000); 
     /*电流限幅3A*/
     if(cell_CUR>3000){
         cell_CUR=3000;

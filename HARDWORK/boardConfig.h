@@ -142,6 +142,20 @@
 #define WAKEUP_KEY_GPIO_PORT             GPIOA
 #define WAKEUP_KEY_GPIO_CLK              RCU_GPIOA
 
+
+/**********************************************************************************************************
+*PD协议芯片_IIC
+**********************************************************************************************************/
+#define HUSB238_IIC_SCL_PIN              GPIO_PIN_11
+#define HUSB238_IIC_SCL_PORT             GPIOA
+#define HUSB238_IIC_SCL_CLK              RCU_GPIOA
+
+#define HUSB238_IIC_SDA_PIN              GPIO_PIN_12
+#define HUSB238_IIC_SDA_PORT             GPIOA
+#define HUSB238_IIC_SDA_CLK              RCU_GPIOA
+
+
+
 #elif balance_board_1
 
 /**********************************************************************************************************

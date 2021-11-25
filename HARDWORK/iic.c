@@ -1,9 +1,11 @@
 #include "iic.h"
 
 //配置成OD模式不需要进行输入输出模式切换
+#define SDA_IN() 0
+#define SDA_OUT() 0
 
-#define SDA_IN()  {GPIO_CTL(GPIOB)&=0X0FFFFFFF;GPIO_CTL(GPIOB)|=(uint32_t)8<<28;}
-#define SDA_OUT() {GPIO_CTL(GPIOB)&=0X0FFFFFFF;GPIO_CTL(GPIOB)|=(uint32_t)3<<28;}
+//#define SDA_IN()  {GPIO_CTL(GPIOB)&=0X0FFFFFFF;GPIO_CTL(GPIOB)|=(uint32_t)8<<28;}
+//#define SDA_OUT() {GPIO_CTL(GPIOB)&=0X0FFFFFFF;GPIO_CTL(GPIOB)|=(uint32_t)3<<28;}
 
 
 //IIC起始信号

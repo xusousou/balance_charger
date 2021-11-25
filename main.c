@@ -71,6 +71,7 @@ int main(void)
 void ADC_Task(void const * pvParameters)
 {
     usart_data_transmit(USART0,0X10); 
+    Husb238_Voltage_Query();
     static int NUM;
     for( ;; ){ 
         /* KEY_Scan(); */
@@ -197,6 +198,7 @@ void None_Task(void const * pvParameters)
             }
             vTaskDelay(50);
         }
-        vTaskDelay(50);
+
+        vTaskDelay(100);
     }
 }
