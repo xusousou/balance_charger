@@ -77,17 +77,15 @@ void Balance_Battery()
 			if (scalar < 1.0f) {
 				scalar = 1.0f;
 			}
-		}
-		else {
+		}else {
 			scalar = 1.0f;
 		}
 
-		if ( ((max_cell_voltage - min_cell_voltage) >= ((float)CELL_DELTA_V_ENABLE_BALANCING * scalar)) && (min_cell_voltage > MIN_CELL_V_FOR_BALANCING) && (battery_state.balancing_enabled == 0)) {
-			battery_state.balancing_enabled = 1;
-		}
-		else if ( (((max_cell_voltage - min_cell_voltage) < ((float)CELL_BALANCING_HYSTERESIS_V * scalar)) && (battery_state.balancing_enabled == 1)) || (min_cell_voltage < MIN_CELL_V_FOR_BALANCING) ) {
-			battery_state.balancing_enabled = 0;
-		}
+        if ( ((max_cell_voltage - min_cell_voltage) >= ((float)CELL_DELTA_V_ENABLE_BALANCING * scalar)) && (min_cell_voltage > MIN_CELL_V_FOR_BALANCING) && (battery_state.balancing_enabled == 0)) {
+            battery_state.balancing_enabled = 1;
+        }else if ( (((max_cell_voltage - min_cell_voltage) < ((float)CELL_BALANCING_HYSTERESIS_V * scalar)) && (battery_state.balancing_enabled == 1)) || (min_cell_voltage < MIN_CELL_V_FOR_BALANCING) ) {
+            battery_state.balancing_enabled = 0;
+        }
 
 		for(int i = 1; i <= battery_state.number_of_cells; i++) {
 			if (Get_Cell_Voltage(i)  >= CELL_OVER_VOLTAGE_ENABLE_DISCHARGE) {

@@ -99,13 +99,13 @@ struct Regulator {
 
 #define IIN_ADC_SCALE				(uint32_t)(0.050 * REG_ADC_MULTIPLIER)
 
-#define MAX_CHARGE_CURRENT_MA		6000
+#define MAX_CHARGE_CURRENT_MA		4000
 #define ASSUME_EFFICIENCY			0.85f
 #define BATTERY_DISCONNECT_THRESH	(uint32_t)(4.215 * REG_ADC_MULTIPLIER)
 #define MAX_CHARGING_POWER			65000
 #define NON_USB_PD_CHARGE_POWER		2500
 
-#define TEMP_THROTTLE_THRESH_C		70
+#define TEMP_THROTTLE_THRESH_C		85
 
 
 void BQ25703A_init(void);
@@ -132,8 +132,9 @@ void Regulator_Set_ADC_Option(void) ;
 void Regulator_Set_Charge_Option_0(void);
 
 void Read_Charge_Status(void);
-//void Control_Charger_Output(uint8_t cell_Num,uint16_t cell_CUR,uint8_t cell_HI_Z);
 void Control_Charger_Output(float vol,uint8_t CELL);
+void Storage_Voltage_Charger(float vol, uint8_t CELL);
+
 void Set_Charge_Current(uint32_t charge_current_limit);
 void Set_Charge_Voltage(uint8_t number_of_cells);
 #endif

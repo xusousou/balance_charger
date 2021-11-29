@@ -13,6 +13,7 @@
 struct Regulator regulator;
 extern volatile struct Battery battery_state;
 extern uint8_t charger_flag;
+uint32_t cell_CUR;
 
 void BQ25703A_init(void)
 {
@@ -350,23 +351,23 @@ void Set_Charge_Voltage(uint8_t number_of_cells) {
 /**********************************************************************************************************
 *根据 MCU 温度计算最大充电功率
 **********************************************************************************************************/
-uint32_t Calculate_Max_Charge_Power() {
-
+uint32_t Calculate_Max_Charge_Power(float vol, uint8_t CELL)
+{
     return 0;
 }
 
 /**********************************************************************************************************
 *确定充电器输出是否应该打开并根据需要设置电压和电流参数
 **********************************************************************************************************/
-
-    uint32_t cell_CUR;
 void Control_Charger_Output(float vol, uint8_t CELL)
 {
-    uint8_t cell_Num;
+    TickType_t xDelay = 500 / portTICK_PERIOD_MS;
+
+    uint8_t cell_Num, Temperature;
 
     float  CUR_value, CUR_min, CUR_max, vol_min, vol_max, power;
     cell_Num =CELL;
-    vol_max=cell_Num*4.200;
+    vol_max=cell_Num*4.215;
     vol_min=cell_Num*1;
     CUR_min=128;
     /*充电电流上限。2S-3A；3S-4.5A；4S-4A*/
@@ -377,10 +378,9 @@ void Control_Charger_Output(float vol, uint8_t CELL)
     }else if(cell_Num==2){
         CUR_max=3000;
     }else CUR_max=0;
-   
-    Balance_Connection_State();
+    cell_CUR = CUR_max;
 
-    //充电电流调整,平均电芯电压在1V-3V以最大电流的1/5进行充电；在3V-4V以最大电流充电；在4V-4.18V充电电流逐渐变小；在4.18V-4.215V电流为2x128mA
+    //充电电流调整,平均电芯电压在1V-3V以最大电流的1/5进行充电；在3V-4V以最大电流充电；在4V-4.20V充电电流逐渐变小；在4.20V-4.215V电流为2x128mA
     if(vol>4.0*cell_Num && vol<=(vol_max-(0.015*cell_Num)) && cell_Num>1){
         cell_CUR= ((4.0*cell_Num)-vol) * ((CUR_max-CUR_min)/((vol_max-(0.015*cell_Num))-(4.0*cell_Num))) + CUR_max + 2*CUR_min;
     }else if(vol>(vol_max-(0.015*cell_Num)) && vol<=vol_max && cell_Num>1){
@@ -392,15 +392,32 @@ void Control_Charger_Output(float vol, uint8_t CELL)
     }else{
         cell_CUR = 0;
     }
-    /*功率限幅60W*/
+
+    /*功率与适配器输出相关，限幅60W*/
     power = Get_HUSB238_Input_Power();
+    if(power > 60) power = 60;
     if(cell_CUR >= ((power/vol)*1000))
-        cell_CUR = ((power/vol)*1000); 
+        cell_CUR = ((power/vol)*1000);
+
+    /*根据 MCU 温度计算最大充电功率*/
+    Temperature = Get_MCU_Temperature();
+    if(Temperature > 80)
+        cell_CUR = 0;
+    else if(Temperature >= 60 && Temperature <= 80)
+        cell_CUR = ((80 - Temperature)/20) * cell_CUR;
+
     /*电流限幅3A*/
     if(cell_CUR>3000){
         cell_CUR=3000;
     }else if(cell_CUR<=0){
         cell_CUR=0;
+    }
+
+    if (regulator.vbat_voltage > (BATTERY_DISCONNECT_THRESH * cell_Num) || regulator.vbat_voltage <= VBAT_ADC_OFFSET) {
+        Regulator_HI_Z(1);
+        vTaskDelay(xDelay);
+        Battery_Connection_State();
+        Regulator_HI_Z(0);
     }
 
     if(cell_Num>1 && Get_Error_State() == 0 && battery_state.cell_over_voltage == 0 &&
@@ -413,9 +430,68 @@ void Control_Charger_Output(float vol, uint8_t CELL)
         Set_Charge_Voltage(cell_Num);
         Set_Charge_Current(CUR_min);
         Regulator_HI_Z(0);
+    }else if(charger_flag == 0 && Get_Error_State() == 0 && battery_state.cell_over_voltage == 0 && Get_Requires_Charging_State() == 1 && cell_Num>1){
+        Set_Charge_Voltage(cell_Num);
+        Set_Charge_Current(CUR_min);
+        Regulator_HI_Z(0);
     }else{
         Set_Charge_Voltage(0);
         Set_Charge_Current(0);
         Regulator_HI_Z(1);
     }
+
+}
+
+void Storage_Voltage_Charger(float vol, uint8_t CELL)
+{
+    TickType_t xDelay = 500 / portTICK_PERIOD_MS;
+    uint8_t cell_Num, Temperature;
+    float  CUR_value, CUR_min, CUR_max, vol_min, vol_max, power;
+
+    cell_Num =CELL;
+    vol_max=cell_Num*3.9;
+    vol_min=cell_Num*1;
+    CUR_min=64;
+
+    /*充电电流上限。2S-3A；3S-4.5A；4S-4A*/
+    if(cell_Num==4){
+        CUR_max=500;
+    }else if(cell_Num==3){
+        CUR_max=CUR_min*2;
+    }else if(cell_Num==2){
+        CUR_max=CUR_min;
+    }else CUR_max=0;
+    cell_CUR = CUR_max;
+
+    /*功率与适配器输出相关，限幅20W*/
+    power = Get_HUSB238_Input_Power();
+    if(power > 20) power = 20;
+    if(cell_CUR >= ((power/vol)*1000))
+        cell_CUR = ((power/vol)*1000);
+
+//    if (regulator.vbat_voltage > (BATTERY_DISCONNECT_THRESH * cell_Num) || regulator.vbat_voltage <= VBAT_ADC_OFFSET) {
+//        Regulator_HI_Z(1);
+//        vTaskDelay(xDelay);
+//        Battery_Connection_State();
+//        Regulator_HI_Z(0);
+//    }
+
+    if(cell_Num>1 && Get_Error_State() == 0 && battery_state.balancing_enabled == 0 && vol>vol_min && vol<=(vol_max-0.05) && cell_Num>1){
+        Set_Charge_Voltage(cell_Num);
+        Set_Charge_Current(cell_CUR);
+        Regulator_HI_Z(0);
+    }else if(battery_state.cell_over_voltage == 0 && battery_state.balancing_enabled == 1 && cell_Num>1 ){
+        Set_Charge_Voltage(cell_Num);
+        Set_Charge_Current(CUR_min*2);
+        Regulator_HI_Z(0);
+    }else if(Get_Error_State() == 0 && vol>(vol_max-0.05) && vol<=vol_max && cell_Num>1){
+        Set_Charge_Voltage(cell_Num);
+        Set_Charge_Current(CUR_min);
+        Regulator_HI_Z(0);
+    }else{
+        Set_Charge_Voltage(0);
+        Set_Charge_Current(0);
+        Regulator_HI_Z(1);
+    }
+
 }

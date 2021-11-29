@@ -63,15 +63,6 @@ void SPI_DMA_WriteReadByte(void)
     while( dma_flag_get( DMA_CH2, DMA_FLAG_FTF ) == RESET);
     dma_flag_clear( DMA_CH2, DMA_FLAG_FTF ) ;
     spi_dma_disable(SPI0, SPI_DMA_TRANSMIT);
-
-//	DMA_CHCTL(DMA_CH2) &= ~DMA_CHXCTL_CHEN;     /*失能DMA通道2*/
-//	DMA_CHCNT(DMA_CH2) = 24;               /*传输长度*/
-//	DMA_CHCTL(DMA_CH2) |= DMA_CHXCTL_CHEN;      /*使能DMA通道2*/
-//    SPI_CTL1(SPI0) |= (uint32_t)SPI_CTL1_DMATEN;
-//	while(RESET == dma_flag_get(DMA_CH2,DMA_FLAG_FTF));
-//    dma_flag_clear( DMA_CH2, DMA_FLAG_FTF ) ;
-//    SPI_CTL1(SPI0) &= ~SPI_CTL1_DMATEN; /*SPI DMA发送使能*/
-
 }
 
 void SetLed(uint32_t RgbData)
@@ -114,6 +105,7 @@ uint8_t abs0(int num)//求绝对值
     num = -num;
     return (unsigned char) num;
 }
+
 uint8_t Triangular(int num)//三角波
 {
     static  int x;
@@ -135,6 +127,19 @@ uint8_t Triangular(int num)//三角波
     return Tstep;
 }
 
+uint8_t Breathe()//三角波
+{
+    static  uint8_t dir,highval;
+    if(dir==1)highval--; //占空比逐渐减少，小灯逐渐变亮
+    if(highval==0)dir=0;
+   
+    if(dir==0)highval++; //占空比逐渐增加，小灯逐渐变暗
+    if(highval>=255)dir=1;
+
+    Tstep=highval;
+    return Tstep;
+}
+
 void chargerToColor(unsigned long color0, unsigned long color1, float bat, uint8_t cell)
 {
     Color_decomposition(color0,color1);
@@ -152,7 +157,7 @@ void chargerToColor(unsigned long color0, unsigned long color1, float bat, uint8
             }else  Vstep = 255; 
             ColorToColor(Vstep);  
             Color_decomposition(0,color);
-            Triangular(NStep); 
+            Breathe(); 
             LED_Control(ColorToColor(Tstep)); 
         break;
         case 3: 
@@ -163,7 +168,7 @@ void chargerToColor(unsigned long color0, unsigned long color1, float bat, uint8
             }else  Vstep = 255;   
             ColorToColor(Vstep);  
             Color_decomposition(0,color);
-            Triangular(NStep); 
+            Breathe(); 
             LED_Control(ColorToColor(Tstep));       
         break;
         case 4: 
@@ -174,14 +179,12 @@ void chargerToColor(unsigned long color0, unsigned long color1, float bat, uint8
             }else  Vstep = 255;      
             ColorToColor(Vstep);  
             Color_decomposition(0,color);
-            Triangular(NStep); 
+            Breathe(); 
             LED_Control(ColorToColor(Tstep));   
         break;
         default:
         break;
     }
-//    printf("%d,%1.3f,%d \r\n",i,bat,NStep);
-
 }
 
 unsigned long  ColorToColor(uint8_t i)
@@ -225,7 +228,7 @@ void Color_decomposition(unsigned long color0, unsigned long color1)
     GreenStep = (float)GreenMinus / NStep;
     BlueStep = (float)BlueMinus / NStep;
 }
-// 渐变开始
+
 uint16_t SE = 0;
 uint8_t bianhuan =1;
 void Colorful_gradient()
@@ -255,8 +258,6 @@ void Colorful_gradient()
             }          
         break;
         default:
-//            Color_decomposition(none,white);
-//            Triangular(NStep);
         break;
     }
     if(bianhuan > 3) {

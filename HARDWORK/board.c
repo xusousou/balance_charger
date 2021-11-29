@@ -19,7 +19,6 @@ void boardInit()
     LED_Control(red);
     USART_Init();
 
- 
     delay_1ms(1000);
     LED_Control(green);
     BQ25703A_init();
@@ -30,7 +29,7 @@ void boardInit()
 
     delay_1ms(1000);
     LED_Control(none);
-    delay_1ms(1000);
+
 }
 
 
