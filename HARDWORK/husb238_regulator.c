@@ -189,11 +189,11 @@ void HUSB238_Input_Power()
         break;
     }
     if( 1 == Get_HUSB238_Connection() ){
-        PD_regulator.PD_INPUT_POWER = PD_regulator.PD_SRC_CURRENT * PD_regulator.PD_SRC_VOLTAGE;
+        PD_regulator.PD_INPUT_POWER = PD_regulator.PD_SRC_CURRENT * PD_regulator.PD_SRC_VOLTAGE * 1000;
     }else if( 2 == Get_HUSB238_Connection() ){
-        PD_regulator.PD_INPUT_POWER = 30;
+        PD_regulator.PD_INPUT_POWER = 30000;
     }
-    else PD_regulator.PD_INPUT_POWER = 4.50;
+    else PD_regulator.PD_INPUT_POWER = NON_USB_PD_CHARGE_POWER;
 }
 
 void Husb238_Voltage_Query()

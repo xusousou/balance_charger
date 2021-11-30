@@ -300,7 +300,7 @@ void Battery_Connection_State()
     }
 
 	if ((battery_state.xt_connected == CONNECTED) && (battery_state.balance_port_connected == CONNECTED)){
-		if (Get_Cell_Voltage(0) < (battery_state.number_of_cells * CELL_VOLTAGE_TO_ENABLE_CHARGING)+0.005) {
+		if ( Get_Cell_Voltage(0) < (battery_state.number_of_cells * (CELL_VOLTAGE_TO_ENABLE_CHARGING + COMPENSATION_VOLTAGE)) ) {
 			battery_state.requires_charging = 1;
 		}else {
 			battery_state.requires_charging = 0;
@@ -329,7 +329,7 @@ void full_charger_Check(float vol, uint8_t CELL)
     volmax = vol>volmax ? vol:volmax;
     volmin = vol<volmin ? vol:volmin;
 
-    if(add==800 && volmin >= 4.184*CELL){
+    if(add==800 && volmin >= 4.185*CELL){
         vol_num=volmax-volmin;
         if(vol_num<0.02 && Get_Balancing_State()==0) 
 			charger_flag=0;

@@ -300,7 +300,6 @@ void Set_Charge_Current(uint32_t charge_current_limit) {
 	return ;
 }
 
-
 /**********************************************************************************************************
 *根据电池数量设置充电电压。 1 - 4.192V, 2 - 8.400V, 3 - 12.592V, 4 - 16.800V
 **********************************************************************************************************/
@@ -369,20 +368,13 @@ void Control_Charger_Output(float vol, uint8_t CELL)
     cell_Num =CELL;
     vol_max=cell_Num*4.215;
     vol_min=cell_Num*1;
-    CUR_min=128;
-    /*充电电流上限。2S-3A；3S-4.5A；4S-4A*/
-    if(cell_Num==4){
-        CUR_max=4500;
-    }else if(cell_Num==3){
-        CUR_max=4500;
-    }else if(cell_Num==2){
-        CUR_max=3000;
-    }else CUR_max=0;
+    CUR_min=64;
+    CUR_max=MAX_CHARGE_CURRENT_MA;
     cell_CUR = CUR_max;
 
     //充电电流调整,平均电芯电压在1V-3V以最大电流的1/5进行充电；在3V-4V以最大电流充电；在4V-4.20V充电电流逐渐变小；在4.20V-4.215V电流为2x128mA
     if(vol>4.0*cell_Num && vol<=(vol_max-(0.015*cell_Num)) && cell_Num>1){
-        cell_CUR= ((4.0*cell_Num)-vol) * ((CUR_max-CUR_min)/((vol_max-(0.015*cell_Num))-(4.0*cell_Num))) + CUR_max + 2*CUR_min;
+        cell_CUR= ((4.0*cell_Num)-vol) * ((CUR_max-CUR_min)/((vol_max-(0.015*cell_Num))-(4.0*cell_Num))) + CUR_max + 4*CUR_min;
     }else if(vol>(vol_max-(0.015*cell_Num)) && vol<=vol_max && cell_Num>1){
         cell_CUR = CUR_min;
     }else if(vol>3.0*cell_Num && vol<=4.0*cell_Num  && cell_Num>1){
@@ -395,9 +387,9 @@ void Control_Charger_Output(float vol, uint8_t CELL)
 
     /*功率与适配器输出相关，限幅60W*/
     power = Get_HUSB238_Input_Power();
-    if(power > 60) power = 60;
-    if(cell_CUR >= ((power/vol)*1000))
-        cell_CUR = ((power/vol)*1000);
+    if(power > 60000) power = 60000;
+    if(cell_CUR >= (power/vol))
+        cell_CUR = (power/vol);
 
     /*根据 MCU 温度计算最大充电功率*/
     Temperature = Get_MCU_Temperature();
@@ -420,20 +412,27 @@ void Control_Charger_Output(float vol, uint8_t CELL)
         Regulator_HI_Z(0);
     }
 
-    if(cell_Num>1 && Get_Error_State() == 0 && battery_state.cell_over_voltage == 0 &&
-        Get_Requires_Charging_State() == 1 && battery_state.balancing_enabled == 0 &&
-        charger_flag == 1){
-        Set_Charge_Voltage(cell_Num);
-        Set_Charge_Current(cell_CUR);
-        Regulator_HI_Z(0);
-    }else if(battery_state.cell_over_voltage == 0 && battery_state.balancing_enabled == 1 && cell_Num>1){
-        Set_Charge_Voltage(cell_Num);
-        Set_Charge_Current(CUR_min);
-        Regulator_HI_Z(0);
-    }else if(charger_flag == 0 && Get_Error_State() == 0 && battery_state.cell_over_voltage == 0 && Get_Requires_Charging_State() == 1 && cell_Num>1){
-        Set_Charge_Voltage(cell_Num);
-        Set_Charge_Current(CUR_min);
-        Regulator_HI_Z(0);
+    if( battery_state.cell_over_voltage == 0 && Get_Error_State() == 0 && cell_Num>1 ){
+        if( Get_Requires_Charging_State() == 1 && battery_state.balancing_enabled == 0 && charger_flag == 1 ){
+            Set_Charge_Voltage(cell_Num);
+            Set_Charge_Current(cell_CUR);
+            Regulator_HI_Z(0);
+        }else if( (charger_flag == 0 && Get_Requires_Charging_State() == 1)){
+            Set_Charge_Voltage(cell_Num);
+            Set_Charge_Current(CUR_min);
+            Regulator_HI_Z(0);
+        }else{
+            Set_Charge_Voltage(0);
+            Set_Charge_Current(0);
+            Regulator_HI_Z(1);
+        }
+
+        if( battery_state.balancing_enabled == 1  ){
+            Set_Charge_Voltage(cell_Num);
+            Set_Charge_Current(CUR_min*2);
+            Regulator_HI_Z(0);
+        }
+
     }else{
         Set_Charge_Voltage(0);
         Set_Charge_Current(0);
@@ -468,13 +467,6 @@ void Storage_Voltage_Charger(float vol, uint8_t CELL)
     if(power > 20) power = 20;
     if(cell_CUR >= ((power/vol)*1000))
         cell_CUR = ((power/vol)*1000);
-
-//    if (regulator.vbat_voltage > (BATTERY_DISCONNECT_THRESH * cell_Num) || regulator.vbat_voltage <= VBAT_ADC_OFFSET) {
-//        Regulator_HI_Z(1);
-//        vTaskDelay(xDelay);
-//        Battery_Connection_State();
-//        Regulator_HI_Z(0);
-//    }
 
     if(cell_Num>1 && Get_Error_State() == 0 && battery_state.balancing_enabled == 0 && vol>vol_min && vol<=(vol_max-0.05) && cell_Num>1){
         Set_Charge_Voltage(cell_Num);

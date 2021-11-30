@@ -77,30 +77,19 @@ void ADC_Task(void const * pvParameters)
         Read_Cell_Voltage();
         tempera = Get_MCU_Temperature();
         cell = Get_Number_Of_Cells();
+        Battery_Connection_State();
         full_charger_Check(adc_values.cell_voltage[0],cell);
-
-        if ( Get_Balance_Connection_State() == NOT_CONNECTED ){
-            Battery_Connection_State();
-        }
-
-        if(Get_Balancing_State() == 0){
-            Balancing_GPIO_Control(0);
-        }
-
-        if (Get_Regulator_Charging_State() == 0 || Get_Balancing_State() != 0) {
-            Balance_Battery();
-        }
-
-        vTaskDelay(2);
+        vTaskDelay(10);
     }
 }
+
 void Charger_Task(void const * pvParameters)
 {
     TickType_t xDelay = 250 / portTICK_PERIOD_MS;
     Regulator_HI_Z(1);
     Query_Regulator_Connection();
 	regulator.connected = Query_Regulator_Connection();
-    Regulator_Set_Charge_Option_0() ;
+    Regulator_Set_Charge_Option_0();
     Regulator_Set_ADC_Option();
     uint8_t timer_count = 0;
     for( ;; ){
@@ -110,17 +99,20 @@ void Charger_Task(void const * pvParameters)
         }else if ((Get_Error_State() & VOLTAGE_INPUT_ERROR) == VOLTAGE_INPUT_ERROR) {
             Clear_Error_State(VOLTAGE_INPUT_ERROR);
         }
+
         if ((Get_Error_State() & REGULATOR_COMMUNICATION_ERROR) == REGULATOR_COMMUNICATION_ERROR) {
             regulator.connected = 0;
         }
+
         Read_Charge_Status();
         Regulator_Read_ADC();
         timer_count++;
+
         if (timer_count < 90 && Get_Balance_Connection_State() == CONNECTED && Get_MCU_Temperature() < TEMP_THROTTLE_THRESH_C) {
             if( Get_XT_Connection_State() == CONNECTED ){
                 Control_Charger_Output(adc_values.cell_voltage[0],cell);
             }else if( Get_XT_Connection_State() == NOT_CONNECTED ){
-                Storage_Voltage_Charger(adc_values.cell_voltage[0],cell);
+//                Storage_Voltage_Charger(adc_values.cell_voltage[0],cell);
             }
         }else if (timer_count > 100){
             timer_count = 0;
@@ -129,13 +121,14 @@ void Charger_Task(void const * pvParameters)
             vTaskDelay(xDelay*2);
             Battery_Connection_State();
         }
+
         vTaskDelay(xDelay);
     }
 }
 
 void Led_Task(void const * pvParameters)
 {
-	TickType_t xDelay = 7 / portTICK_PERIOD_MS;
+	TickType_t xDelay = 6 / portTICK_PERIOD_MS;
     for( ;; ){
         if ( (Get_Balance_Connection_State() != CONNECTED) && (Get_Error_State() == 0)) {
             Colorful_gradient();
@@ -171,15 +164,15 @@ void None_Task(void const * pvParameters)
 {
     static int NUM;
     for( ;; ){
-//        KEY_Scan();
-//        if(KEY1_Flag)
-//        {
+        KEY_Scan();
+        if(KEY1_Flag)
+        {
             NUM++;
             if(NUM>=10){
                 NUM=0;
                 printf("%d,%d,%1.3f,%1.3f,%1.3f,%1.3f,%1.3f,%1.3f \r\n",NUM,cell, adc_values.cell_voltage[0],adc_values.cell_voltage[1],adc_values.cell_voltage[2],adc_values.cell_voltage[3],adc_values.cell_voltage[4],adc_values.vrefint);   
             }
-//        }
-        vTaskDelay(5);
+        }
+        vTaskDelay(10);
     }
 }
