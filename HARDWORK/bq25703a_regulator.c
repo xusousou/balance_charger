@@ -14,6 +14,7 @@ struct Regulator regulator;
 extern volatile struct Battery battery_state;
 extern uint8_t charger_flag;
 uint32_t cell_CUR;
+extern uint32_t charge_timeout;
 
 void BQ25703A_init(void)
 {
@@ -102,52 +103,92 @@ void I2C_Write_Two_Byte_Register(uint8_t WriteAddr, uint8_t lsb_data, uint8_t ms
     softDelayUs(10);
 }
 
-/**********************************************************************************************************
-*获取充电芯片连接状态
-**********************************************************************************************************/
+/****
+    * @函数名     Get_Regulator_Connection_State 
+    * @描述       获取充电芯片连接状态     
+    * @传入参数   无
+    * @传出参数   无
+    * @返回值     连接状态; CONNECTED = 1；NOT_CONNECTED = 0；
+    */
 uint8_t Get_Regulator_Connection_State(void){
 	return regulator.connected;
 }
-/**********************************************************************************************************
-*获取充电芯片充电状态
-**********************************************************************************************************/
+
+/****
+    * @函数名     Get_Regulator_Charging_State 
+    * @描述       获取充电芯片充电状态     
+    * @传入参数   无
+    * @传出参数   无
+    * @返回值     充电状态; charging = 1；not_charging = 0；
+    */
 uint8_t Get_Regulator_Charging_State(void){
 	return regulator.charging_status;
 }
-/**********************************************************************************************************
-*获取充电芯片VBAT电压
-**********************************************************************************************************/
+
+/****
+    * @函数名     Get_VBAT_ADC_Reading
+    * @描述       获取充电芯片VBAT电压     
+    * @传入参数   无
+    * @传出参数   无
+    * @返回值     VBAT电压；
+    */
 uint32_t Get_VBAT_ADC_Reading() {
 	return regulator.vbat_voltage;
 }
-/**********************************************************************************************************
-*获取充电芯片VBUS电压
-**********************************************************************************************************/
+
+/****
+    * @函数名     Get_VBUS_ADC_Reading 
+    * @描述       获取充电芯片VBUS电压     
+    * @传入参数   无
+    * @传出参数   无
+    * @返回值     VBUS电压；
+    */
 uint32_t Get_VBUS_ADC_Reading() {
 	return regulator.vbus_voltage;
 }
 /**********************************************************************************************************
 *获取充电芯片输入电流
 **********************************************************************************************************/
+/****
+    * @函数名     Get_Input_Current_ADC_Reading 
+    * @描述       获取充电芯片输入电流     
+    * @传入参数   无
+    * @传出参数   无
+    * @返回值     充电芯片输入电流；
+    */
 uint32_t Get_Input_Current_ADC_Reading() {
 	return regulator.input_current;
 }
-/**********************************************************************************************************
-*获取充电芯片输出电流
-**********************************************************************************************************/
+
+/****
+    * @函数名     Get_Charge_Current_ADC_Reading 
+    * @描述       获取充电芯片输出电流     
+    * @传入参数   无
+    * @传出参数   无
+    * @返回值     充电芯片输出电流；
+    */
 uint32_t Get_Charge_Current_ADC_Reading() {
 	return regulator.charge_current;
 }
-/**********************************************************************************************************
-*获取充电芯片最大充电电流
-**********************************************************************************************************/
+
+/****
+    * @函数名     Get_Max_Charge_Current 
+    * @描述       获取充电芯片最大充电电流     
+    * @传入参数   无
+    * @传出参数   无
+    * @返回值     ；
+    */
 uint32_t Get_Max_Charge_Current() {
 	return regulator.max_charge_current_ma;
 }
 
-/**********************************************************************************************************
-*检查充电芯片I2C连接
-**********************************************************************************************************/
+/****
+    * @函数名     Query_Regulator_Connection 
+    * @描述       检查充电芯片I2C连接     
+    * @传入参数   无
+    * @传出参数   无
+    * @返回值     连接状态；
+    */
 uint8_t Query_Regulator_Connection() {
 	/* Get the manufacturer id */
 	uint8_t manufacturer_id;
@@ -167,16 +208,24 @@ uint8_t Query_Regulator_Connection() {
 	}
 }
 
-/**********************************************************************************************************
-*检查 Charge OK 引脚的状态并返回值
-**********************************************************************************************************/
+/****
+    * @函数名     Read_Charge_Okay 
+    * @描述       检查 Charge OK 引脚的状态并返回值     
+    * @传入参数   无
+    * @传出参数   无
+    * @返回值     Charge OK 引脚的状态；
+    */
 uint8_t Read_Charge_Okay() {
 	return gpio_input_bit_get(CHRG_OK_PORT, CHRG_OK_PIN);
 }
 
-/**********************************************************************************************************
-*读取 ChargeStatus 寄存器并设置状态
-**********************************************************************************************************/
+/****
+    * @函数名     Read_Charge_Status 
+    * @描述       读取 ChargeStatus 寄存器并设置状态     
+    * @传入参数   无
+    * @传出参数   无
+    * @返回值     无；
+    */
 void Read_Charge_Status() {
 	uint8_t data[2];
 	I2C_Read_Register(CHARGE_STATUS_ADDR, data, 2);
@@ -189,9 +238,13 @@ void Read_Charge_Status() {
 	}
 }
 
-/**********************************************************************************************************
-*设置充电芯片 ADC 设置
-**********************************************************************************************************/
+/****
+    * @函数名     Regulator_Set_ADC_Option 
+    * @描述       设置充电芯片 ADC 设置     
+    * @传入参数   无
+    * @传出参数   无
+    * @返回值     无；
+    */
 void Regulator_Set_ADC_Option() {
 
 	uint8_t ADC_lsb_3A = ADC_ENABLED_BITMASK;
@@ -199,9 +252,13 @@ void Regulator_Set_ADC_Option() {
 	I2C_Write_Register(ADC_OPTION_ADDR, (uint8_t *) &ADC_lsb_3A);
 }
 
-/**********************************************************************************************************
-*启动并读取充电芯片单个 ADC 转换
-**********************************************************************************************************/
+/****
+    * @函数名     Regulator_Read_ADC 
+    * @描述       启动并读取充电芯片单个 ADC 转换     
+    * @传入参数   无
+    * @传出参数   无
+    * @返回值     无；
+    */
 void Regulator_Read_ADC() {
 	TickType_t xDelay = 80 / portTICK_PERIOD_MS;
 
@@ -233,9 +290,14 @@ void Regulator_Read_ADC() {
 	regulator.vbus_voltage = (temp * VBUS_ADC_SCALE) + VBUS_ADC_OFFSET;
 }
 
-/**********************************************************************************************************
-*充电芯片输出启用或禁用高阻抗模式
-**********************************************************************************************************/
+
+/****
+    * @函数名     Regulator_HI_Z 
+    * @描述       充电芯片输出启用或禁用高阻抗模式     
+    * @传入参数   无
+    * @传出参数   无
+    * @返回值     无；
+    */
 void Regulator_HI_Z(uint8_t hi_z_en) {
 	if (hi_z_en == 1) {
 		gpio_bit_reset(ILIM_HIZ_PORT, ILIM_HIZ_PIN);
@@ -245,9 +307,13 @@ void Regulator_HI_Z(uint8_t hi_z_en) {
 	}
 }
 
-/**********************************************************************************************************
-*启用或禁用 On the Go 模式
-**********************************************************************************************************/
+/****
+    * @函数名     Regulator_OTG_EN 
+    * @描述       启用或禁用 On the Go 模式     
+    * @传入参数   无
+    * @传出参数   无
+    * @返回值     无；
+    */
 void Regulator_OTG_EN(uint8_t otg_en) {
 	if (otg_en == 0) {
 		gpio_bit_reset(EN_OTG_PORT, EN_OTG_PIN);
@@ -257,9 +323,13 @@ void Regulator_OTG_EN(uint8_t otg_en) {
 	}
 }
 
-/**********************************************************************************************************
-*设置Charge Option 0 
-**********************************************************************************************************/
+/****
+    * @函数名     Regulator_Set_Charge_Option_0 
+    * @描述       设置Charge Option 0      
+    * @传入参数   无
+    * @传出参数   无
+    * @返回值     无；
+    */
 void Regulator_Set_Charge_Option_0() {
 
 	uint8_t charge_option_0_register_1_value = 0b00100110;
@@ -270,9 +340,13 @@ void Regulator_Set_Charge_Option_0() {
 	return;
 }
 
-/**********************************************************************************************************
-*设置充电电流限制。 从 64mA 到 8.128A，步进为 64mA。 映射从 0 - 128。7 位值。
-**********************************************************************************************************/
+/****
+    * @函数名     Set_Charge_Current 
+    * @描述       设置充电电流限制。 从 64mA 到 8.128A，步进为 64mA。 映射从 0 - 128。7 位值。     
+    * @传入参数   无
+    * @传出参数   无
+    * @返回值     无；
+    */
 void Set_Charge_Current(uint32_t charge_current_limit) {
 
 	uint8_t charge_current_register_1_value = 0;
@@ -300,9 +374,13 @@ void Set_Charge_Current(uint32_t charge_current_limit) {
 	return ;
 }
 
-/**********************************************************************************************************
-*根据电池数量设置充电电压。 1 - 4.192V, 2 - 8.400V, 3 - 12.592V, 4 - 16.800V
-**********************************************************************************************************/
+/****
+    * @函数名     Set_Charge_Voltage 
+    * @描述       根据电池数量设置充电电压。 1 - 4.192V, 2 - 8.400V, 3 - 12.592V, 4 - 16.800V     
+    * @传入参数   无
+    * @传出参数   无
+    * @返回值     无；
+    */
 void Set_Charge_Voltage(uint8_t number_of_cells) {
 
 	uint8_t max_charge_register_1_value = 0;
@@ -347,22 +425,38 @@ void Set_Charge_Voltage(uint8_t number_of_cells) {
 	return;
 }
 
-/**********************************************************************************************************
-*根据 MCU 温度计算最大充电功率
-**********************************************************************************************************/
-uint32_t Calculate_Max_Charge_Power(float vol, uint8_t CELL)
+/****
+    * @函数名     Calculate_Max_Charge_Power 
+    * @描述       根据 MCU 温度计算最大充电功率     
+    * @传入参数   无
+    * @传出参数   无
+    * @返回值     ；
+    */
+uint32_t Calculate_Max_Charge_Power(uint8_t CUR)
 {
+    uint8_t Temperature;
+
+    Temperature = Get_MCU_Temperature();
+    if(Temperature > 80)
+        CUR = 0;
+    else if(Temperature >= 60 && Temperature <= 80)
+        CUR = ((80 - Temperature)/20) * CUR;
     return 0;
 }
 
-/**********************************************************************************************************
-*确定充电器输出是否应该打开并根据需要设置电压和电流参数
-**********************************************************************************************************/
+
+/****
+    * @函数名     Control_Charger_Output 
+    * @描述       确定充电器输出是否应该打开并根据需要设置电压和电流参数     
+    * @传入参数   无
+    * @传出参数   无
+    * @返回值     无；
+    */
 void Control_Charger_Output(float vol, uint8_t CELL)
 {
     TickType_t xDelay = 500 / portTICK_PERIOD_MS;
 
-    uint8_t cell_Num, Temperature;
+    uint8_t cell_Num;
 
     float  CUR_value, CUR_min, CUR_max, vol_min, vol_max, power;
     cell_Num =CELL;
@@ -392,11 +486,7 @@ void Control_Charger_Output(float vol, uint8_t CELL)
         cell_CUR = (power/vol);
 
     /*根据 MCU 温度计算最大充电功率*/
-    Temperature = Get_MCU_Temperature();
-    if(Temperature > 80)
-        cell_CUR = 0;
-    else if(Temperature >= 60 && Temperature <= 80)
-        cell_CUR = ((80 - Temperature)/20) * cell_CUR;
+    Calculate_Max_Charge_Power(cell_CUR);
 
     /*电流限幅3A*/
     if(cell_CUR>3000){
@@ -412,35 +502,47 @@ void Control_Charger_Output(float vol, uint8_t CELL)
         Regulator_HI_Z(0);
     }
 
-    if( battery_state.cell_over_voltage == 0 && Get_Error_State() == 0 && cell_Num>1 ){
-        if( Get_Requires_Charging_State() == 1 && battery_state.balancing_enabled == 0 && charger_flag == 1 ){
-            Set_Charge_Voltage(cell_Num);
-            Set_Charge_Current(cell_CUR);
-            Regulator_HI_Z(0);
-        }else if( (charger_flag == 0 && Get_Requires_Charging_State() == 1)){
-            Set_Charge_Voltage(cell_Num);
-            Set_Charge_Current(CUR_min);
-            Regulator_HI_Z(0);
+    if( charge_timeout <= 14400  ){
+        if( battery_state.cell_over_voltage == 0 && Get_Error_State() == 0 && cell_Num>1 ){
+            if( Get_Requires_Charging_State() == 1 && battery_state.balancing_enabled == 0 && charger_flag == 1 ){
+                Set_Charge_Voltage(cell_Num);
+                Set_Charge_Current(cell_CUR);
+                Regulator_HI_Z(0);
+            }else if( (charger_flag == 0 && Get_Requires_Charging_State() == 1)){
+                Set_Charge_Voltage(cell_Num);
+                Set_Charge_Current(CUR_min);
+                Regulator_HI_Z(0);
+            }else{
+                Set_Charge_Voltage(0);
+                Set_Charge_Current(0);
+                Regulator_HI_Z(1);
+            }
+
+            if( battery_state.balancing_enabled == 1  ){
+                Set_Charge_Voltage(cell_Num);
+                Set_Charge_Current(CUR_min*2);
+                Regulator_HI_Z(0);
+            }
         }else{
             Set_Charge_Voltage(0);
             Set_Charge_Current(0);
             Regulator_HI_Z(1);
         }
-
-        if( battery_state.balancing_enabled == 1  ){
-            Set_Charge_Voltage(cell_Num);
-            Set_Charge_Current(CUR_min*2);
-            Regulator_HI_Z(0);
-        }
-
     }else{
-        Set_Charge_Voltage(0);
-        Set_Charge_Current(0);
-        Regulator_HI_Z(1);
+            Set_Charge_Voltage(0);
+            Set_Charge_Current(0);
+            Regulator_HI_Z(1);
     }
 
 }
 
+/****
+    * @函数名     Storage_Voltage_Charger 
+    * @描述       存储电压充电（暂不使用）     
+    * @传入参数   无
+    * @传出参数   无
+    * @返回值     无；
+    */
 void Storage_Voltage_Charger(float vol, uint8_t CELL)
 {
     TickType_t xDelay = 500 / portTICK_PERIOD_MS;

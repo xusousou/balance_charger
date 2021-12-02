@@ -15,6 +15,8 @@
 #define IIC_SDA(n)   (n?gpio_bit_set(GPIOB,GPIO_PIN_7):gpio_bit_reset(GPIOB,GPIO_PIN_7))
 #define READ_SDA     gpio_input_bit_get(GPIOB,GPIO_PIN_7)
 
+#define SDA_IN() 0
+#define SDA_OUT() 0
 
 void i2c_start(void);
 void i2c_stop(void);

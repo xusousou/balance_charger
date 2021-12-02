@@ -2,10 +2,13 @@
 
 volatile uint32_t error_state = 0;
 
-/**
- * @brief Returns the error state
- * @retval uint32_t NO_ERROR if no error. Other errors are defined in battery.h
- */
+/****
+    * @函数名     Get_Error_State 
+    * @描述       获取错误状态     
+    * @传入参数   无
+    * @传出参数   无
+    * @返回值     错误状态;
+    */
 uint32_t Get_Error_State(void) {
 	return error_state;
 }

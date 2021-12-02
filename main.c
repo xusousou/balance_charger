@@ -17,6 +17,7 @@ extern struct Adc adc_values;
 extern char KEY1,KEY1_Flag;
 
 uint8_t charger_flag = 1;
+uint32_t charge_timeout = 0;
 float tempera;
 
 osThreadId myTask01Handle;
@@ -79,7 +80,7 @@ void ADC_Task(void const * pvParameters)
         cell = Get_Number_Of_Cells();
         Battery_Connection_State();
         full_charger_Check(adc_values.cell_voltage[0],cell);
-        vTaskDelay(10);
+        vTaskDelay(5);
     }
 }
 
@@ -108,6 +109,10 @@ void Charger_Task(void const * pvParameters)
         Regulator_Read_ADC();
         timer_count++;
 
+        if(  charger_flag == 0 && charge_timeout < 100000 ){
+            charge_timeout++;
+        }
+
         if (timer_count < 90 && Get_Balance_Connection_State() == CONNECTED && Get_MCU_Temperature() < TEMP_THROTTLE_THRESH_C) {
             if( Get_XT_Connection_State() == CONNECTED ){
                 Control_Charger_Output(adc_values.cell_voltage[0],cell);
@@ -118,10 +123,7 @@ void Charger_Task(void const * pvParameters)
             timer_count = 0;
         }else {
             Regulator_HI_Z(1);
-            vTaskDelay(xDelay*2);
-            Battery_Connection_State();
         }
-
         vTaskDelay(xDelay);
     }
 }

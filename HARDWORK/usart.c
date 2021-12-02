@@ -10,9 +10,7 @@ static uint8_t USART_Tx_Buf[USART_SEND_BUF_SIZE];// 用于保存 Tx 要发送的
 static uint16_t USART_Tx_Len = 0;                // 用于保存 Tx 要发送的数据的个数
 static uint16_t USART_Tx_Count = 0;              // 用于保存 Tx 要发送的数据时已经发送的数据个数
 
-/**
- * @brief 初始化串口
- */
+
 void USART_Init()
 {
 	rcu_periph_clock_enable(RCU_GPIOA); // 使能外设时钟
@@ -35,76 +33,4 @@ void USART_Init()
 	usart_enable                   (USART0);                        // 使能USART
 	
 }
-
-/**
- * @brief 使用串口发送数据
- */
-//void USART_Send()
-//{
-////	usart_interrupt_enable(USART0, USART_INT_TBE);
-//}
-
-///**
-// * @brief 串口 0 中断服务函数
-// */
-//void USART0_IRQHandler(void)
-//{
-//	// 如果满足以下条件，说明检测到“读数据缓冲区非空中断标志”被置位
-//	if(RESET != usart_interrupt_flag_get(USART0, USART_INT_FLAG_RBNE))
-//	{ 
-//		usart_interrupt_flag_clear(USART0, USART_INT_FLAG_RBNE);// 清除标志位
-//		
-//		uint8_t ch = (uint8_t)usart_data_receive(USART0);// 从 RX 数据寄存器中读取数据
-//		
-//		// 如果满足以下条件，说明缓存区还有空间去存储数据
-//		if(USART_Rx_Count < USART_RECV_BUF_SIZE)
-//		{
-//			USART_Rx_Buf[USART_Rx_Count++] = ch;
-//		}
-//	}
-//	// 如果满足以下条件，说明检测到“IDLE线检测中断标志”被置位
-//	if(RESET != usart_interrupt_flag_get(USART0, USART_INT_FLAG_IDLE))
-//	{
-//		usart_interrupt_flag_clear(USART0, USART_INT_FLAG_IDLE);
-//		
-//		// 如果满足以下条件，说明已经接收到了一帧数据
-//		if(USART_Rx_Count > 0)
-//		{		
-//			usart_receive_config(USART0, USART_RECEIVE_DISABLE);// 关闭串口接收功能，准备处理数据
-
-//			USART_Rx_Len   = USART_Rx_Count;
-//			USART_Rx_Count = 0;	
-
-//			SEGGER_RTT_printf(0,"Receive %d bytes!\n", USART_Rx_Len);	
-//		}
-//	}
-//	// 如果满足以下条件，说明检测到“发送缓冲区空中断标志”被置位
-//	if(RESET != usart_interrupt_flag_get(USART0, USART_INT_FLAG_TBE))
-//	{
-//		usart_interrupt_flag_clear(USART0, USART_INT_FLAG_TBE);
-
-//		// 如果满足以下条件，说明缓存中有数据需要发送
-//		if(USART_Tx_Len > 0)
-//		{
-//			// 如果满足以下条件，说明缓存中还有数据没发送完
-//			if(USART_Tx_Count < USART_Tx_Len)
-//			{
-//				usart_data_transmit(USART0, USART_Tx_Buf[USART_Tx_Count++]);
-//			}
-//			// 反之，说明缓存中的数据都已经发送完毕
-//			else
-//			{
-//				usart_interrupt_disable(USART0, USART_INT_TBE);
-
-//				USART_Tx_Len = 0;
-//				USART_Tx_Count = 0;
-//			}
-//		}
-//		// 反之，说明缓存中没有数据需要发送
-//		else
-//		{
-//			usart_interrupt_disable(USART0, USART_INT_TBE);
-//		}
-//	}
-//}
 

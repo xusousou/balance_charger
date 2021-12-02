@@ -26,6 +26,14 @@ void balance_Init()
     gpio_bit_reset(CELL_4S_DIS_EN_PORT,CELL_4S_DIS_EN_PIN); 
 
 }
+
+/****
+    * @函数名     Balancing_GPIO_Control
+    * @描述       平衡电阻开关控制     
+    * @传入参数   需要导通的平衡电阻
+    * @传出参数   无
+    * @返回值     无；
+    */
 void Balancing_GPIO_Control(uint8_t cell_balancing_gpio_bitmask)
 {
 	if ( cell_balancing_gpio_bitmask & (1<<3) ) {
@@ -56,9 +64,18 @@ void Balancing_GPIO_Control(uint8_t cell_balancing_gpio_bitmask)
         gpio_bit_reset(CELL_1S_DIS_EN_PORT,CELL_1S_DIS_EN_PIN); 
 	}
 }
-float scalar = 0.0f;
+
+/****
+    * @函数名     Balance_Battery
+    * @描述       电池平衡控制     
+    * @传入参数   无
+    * @传出参数   无
+    * @返回值     无；
+    */
 void Balance_Battery()
 {
+    float scalar = 0.0f;
+
 	if ( (battery_state.balance_port_connected == CONNECTED) && (Get_Error_State() == 0) ) {
 
 		uint32_t min_cell_voltage = Get_Cell_Voltage(1);

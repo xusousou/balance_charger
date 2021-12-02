@@ -21,90 +21,6 @@ uint8_t cell;
 float vol_num,volmax,volmin;
 static uint32_t add;
 
-#ifdef adc_1
-void SW_Init()
-{
-    rcu_periph_clock_enable(SWA_CLK);
-    rcu_periph_clock_enable(SWB_CLK);
-
-    gpio_mode_set(SWA_PORT,GPIO_MODE_OUTPUT,GPIO_PUPD_NONE,SWA_PIN);
-    gpio_mode_set(SWB_PORT,GPIO_MODE_OUTPUT,GPIO_PUPD_NONE,SWB_PIN);
-
-    gpio_output_options_set(SWA_PORT,GPIO_OTYPE_PP,GPIO_OSPEED_50MHZ,SWA_PIN);
-    gpio_output_options_set(SWB_PORT,GPIO_OTYPE_PP,GPIO_OSPEED_50MHZ,SWB_PIN);    
- 
-}
-
-uint8_t cell_Select(uint8_t num)
-{  
-   switch(num)
-   {
-    case 2:
-        gpio_bit_reset(SWA_PORT,SWA_PIN); 
-        gpio_bit_reset(SWB_PORT,SWB_PIN); 
-    break; 
-    case 3:
-        gpio_bit_reset(SWA_PORT,SWA_PIN); 
-        gpio_bit_set(SWB_PORT,SWB_PIN);  
-    break; 
-    case 4:
-        gpio_bit_set(SWA_PORT,SWA_PIN); 
-        gpio_bit_set(SWB_PORT,SWB_PIN);   
-    break;  
-   }return 0;
-}
-
-
-//获取电池电压
-void Read_Cell_Voltage()
-{
-    //2S
-    cell_Select(2);   
-//    vTaskDelay(200); 
-    for(uint16_t i=220;i>0;i--)
-    {
-        /*ADC数据处理*/      
-        Get_Adc_Val(&vol_bat,&vol_1s,&vol_2s);
-        get_low_filter(&vol_bat,&vol_1s,&vol_2s);
-        vTaskDelay(1); 
-    }
-    value2S = (float)(adc_data[2]/1 *3.3/4096)*2;
-
-    //3S
-    cell_Select(3);
-//    vTaskDelay(200); 
-    for(uint16_t i=220;i>0;i--)
-    {
-        /*ADC数据处理*/      
-        Get_Adc_Val(&vol_bat,&vol_1s,&vol_3s);
-        get_low_filter(&vol_bat,&vol_1s,&vol_3s);
-        vTaskDelay(1); 
-    }
-    value3S = (float)(adc_data[2]/1 *3.3/4096)*2;
-
-    //4S
-    cell_Select(4);
-//    vTaskDelay(200); 
-    for(uint16_t i=220;i>0;i--)
-    {
-        /*ADC数据处理*/      
-        Get_Adc_Val(&vol_bat,&vol_1s,&vol_4s);
-        get_low_filter(&vol_bat,&vol_1s,&vol_4s);
-        vTaskDelay(1); 
-    }
-  
-    valueBAT = (float)(adc_data[0]/1 * 3.3/4096)*11;
-    value1S = (float)(adc_data[1]/1 *3.3/4096)*2;
-    value4S = (float)(adc_data[2]/1 *3.3/4096)*2;  
-     
-    adc_values.cell_voltage[0]=(value1S+value2S+value3S+value4S+valueBAT)/2;
-    adc_values.cell_voltage[1]=value1S;
-    adc_values.cell_voltage[2]=value2S;
-    adc_values.cell_voltage[3]=value3S;
-    adc_values.cell_voltage[4]=value4S;
-    cell_Select(2);
-}
-#else
 
 /****
     * @函数名     Read_Cell_Voltage 
@@ -153,8 +69,6 @@ void Read_Cell_Voltage()
             break;
     }
 }
-
-#endif
 
 /****
     * @函数名     Balance_Connection_State 
@@ -329,7 +243,7 @@ void full_charger_Check(float vol, uint8_t CELL)
     volmax = vol>volmax ? vol:volmax;
     volmin = vol<volmin ? vol:volmin;
 
-    if(add==800 && volmin >= 4.185*CELL){
+    if(add==2000 && volmin >= 4.185*CELL){
         vol_num=volmax-volmin;
         if(vol_num<0.02 && Get_Balancing_State()==0) 
 			charger_flag=0;
@@ -338,7 +252,7 @@ void full_charger_Check(float vol, uint8_t CELL)
     if(volmin<=4.165*CELL)
 		charger_flag=1;
 
-    if(add > 800) 
+    if(add > 2000) 
 		add=0;
 }
 

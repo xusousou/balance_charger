@@ -1,7 +1,5 @@
 #include "rgbled.h"
 
-#ifdef  WS2812B
-
 uint8_t DataRGB[24];
 #define Data0Time 0xC0
 #define Data1Time 0xFC
@@ -127,13 +125,13 @@ uint8_t Triangular(int num)//三角波
     return Tstep;
 }
 
-uint8_t Breathe()//三角波
+uint8_t Breathe()
 {
     static  uint8_t dir,highval;
-    if(dir==1)highval--; //占空比逐渐减少，小灯逐渐变亮
+    if(dir==1)highval--; //占空比逐渐减少，灯逐渐变亮
     if(highval==0)dir=0;
    
-    if(dir==0)highval++; //占空比逐渐增加，小灯逐渐变暗
+    if(dir==0)highval++; //占空比逐渐增加，灯逐渐变暗
     if(highval>=255)dir=1;
 
     Tstep=highval;
@@ -265,79 +263,4 @@ void Colorful_gradient()
         bianhuan = 1;
     }
 }
-
-
-#elif  Common_positive_RGB
-void rgbInit()
-{
-    rcu_periph_clock_enable(R_CLK);
-    rcu_periph_clock_enable(G_CLK);
-    rcu_periph_clock_enable(B_CLK);
-    
-    gpio_deinit(G_PORT);
-    gpio_deinit(R_PORT);
-    gpio_deinit(B_PORT);    
-    gpio_mode_set(R_PORT,GPIO_MODE_OUTPUT,GPIO_PUPD_NONE,R_PIN);
-    gpio_mode_set(G_PORT,GPIO_MODE_OUTPUT,GPIO_PUPD_NONE,G_PIN);
-    gpio_mode_set(B_PORT,GPIO_MODE_OUTPUT,GPIO_PUPD_NONE,B_PIN);
-    gpio_output_options_set(G_PORT,GPIO_OTYPE_PP,GPIO_OSPEED_50MHZ,G_PIN);
-    gpio_output_options_set(R_PORT,GPIO_OTYPE_PP,GPIO_OSPEED_50MHZ,R_PIN);    
-    gpio_output_options_set(B_PORT,GPIO_OTYPE_PP,GPIO_OSPEED_50MHZ,B_PIN);  
- 
-    gpio_bit_set(R_PORT,R_PIN);       
-    gpio_bit_set(G_PORT,G_PIN); 
-    gpio_bit_set(B_PORT,B_PIN);    
-}
-
-
-void LED_Control(uint32_t color)
-{
-    switch(color){
-        case 0://鐏?
-            gpio_bit_set(R_PORT,R_PIN);       
-            gpio_bit_set(G_PORT,G_PIN); 
-            gpio_bit_set(B_PORT,B_PIN); 
-        break;        
-        case 1://绾?
-            gpio_bit_reset(R_PORT,R_PIN);       
-            gpio_bit_set(G_PORT,G_PIN); 
-            gpio_bit_set(B_PORT,B_PIN);
-        break;
-        case 2://姗?
-            gpio_bit_reset(R_PORT,R_PIN);       
-            gpio_bit_reset(G_PORT,G_PIN); 
-            gpio_bit_set(B_PORT,B_PIN);
-        break;
-        case 3://榛?
-
-        break;
-        case 4://缁?
-            gpio_bit_set(R_PORT,R_PIN);       
-            gpio_bit_reset(G_PORT,G_PIN); 
-            gpio_bit_set(B_PORT,B_PIN);
-        break;
-        case 5://闱?
-            gpio_bit_set(R_PORT,R_PIN);       
-            gpio_bit_reset(G_PORT,G_PIN); 
-            gpio_bit_reset(B_PORT,B_PIN);
-        break;
-        case 6://钃?
-            gpio_bit_set(R_PORT,R_PIN);       
-            gpio_bit_set(G_PORT,G_PIN); 
-            gpio_bit_reset(B_PORT,B_PIN);
-        break;
-        case 7://绱?
-            gpio_bit_reset(R_PORT,R_PIN);       
-            gpio_bit_set(G_PORT,G_PIN); 
-            gpio_bit_reset(B_PORT,B_PIN);
-        break;
-        default: 
-            gpio_bit_set(R_PORT,R_PIN);       
-            gpio_bit_set(G_PORT,G_PIN); 
-            gpio_bit_set(B_PORT,B_PIN);    
-            break;
-    }
-}
-
-#endif
 

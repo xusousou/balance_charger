@@ -37,9 +37,13 @@ void Husb238_IIC_Write_Register(uint8_t WriteAddr,uint8_t DataToWrite)
     softDelayUs(10);
 }
 
-/**********************************************************************************************************
-*检查HUSB238充电芯片
-**********************************************************************************************************/
+/****
+    * @函数名     HUSB238_Query_Regulator_Connection 
+    * @描述       HUSB238获取适配器输出状态     
+    * @传入参数   无
+    * @传出参数   无
+    * @返回值     无;
+    */
 void HUSB238_Query_Regulator_Connection()
 {
     Husb238_IIC_Read_Register(PD_STATUS0, &PD_regulator.Husb238_PD_STATUS0, 1);
@@ -54,6 +58,13 @@ void HUSB238_Query_Regulator_Connection()
 
 }
 
+/****
+    * @函数名     Husb238_Set_PDO_Voltage 
+    * @描述       设置PD协议输出电压 
+    * @传入参数   无
+    * @传出参数   无
+    * @返回值     无;
+    */
 void Husb238_Set_PDO_Voltage()
 {   
     if( Get_HUSB238_Connection() > 0 )
@@ -110,6 +121,13 @@ void Husb238_Set_PDO_Voltage()
     }
 }
 
+/****
+    * @函数名     Husb238_Set_PDO_Voltage 
+    * @描述       读取适配器输出功率 
+    * @传入参数   无
+    * @传出参数   无
+    * @返回值     无;
+    */
 void HUSB238_Input_Power()
 {
     Husb238_IIC_Read_Register(PD_STATUS0, &PD_regulator.Husb238_PD_STATUS0, 1);
@@ -196,6 +214,13 @@ void HUSB238_Input_Power()
     else PD_regulator.PD_INPUT_POWER = NON_USB_PD_CHARGE_POWER;
 }
 
+/****
+    * @函数名     Husb238_Voltage_Query 
+    * @描述       HUSB238配置输入
+    * @传入参数   无
+    * @传出参数   无
+    * @返回值     无;
+    */
 void Husb238_Voltage_Query()
 {
     HUSB238_Query_Regulator_Connection();
@@ -203,7 +228,13 @@ void Husb238_Voltage_Query()
     HUSB238_Input_Power();
 }
 
-
+/****
+    * @函数名     Get_HUSB238_Connection 
+    * @描述       获取HUSB238连接状态
+    * @传入参数   无
+    * @传出参数   无
+    * @返回值     无;
+    */
 uint32_t Get_HUSB238_Connection() {
 	return PD_regulator.Husb238_connected;
 }
