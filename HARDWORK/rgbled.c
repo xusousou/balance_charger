@@ -1,3 +1,12 @@
+/**
+  ******************************************************************************
+  *	文件: rgbled.c
+  * 描述: RGB控制WS2812B
+  ******************************************************************************
+  * @attention
+  ******************************************************************************
+**/
+
 #include "rgbled.h"
 
 uint8_t DataRGB[24];
@@ -44,7 +53,7 @@ void rgbInit()
     spi_init_struct.frame_size           = SPI_FRAMESIZE_8BIT;
     spi_init_struct.clock_polarity_phase = SPI_CK_PL_HIGH_PH_2EDGE;
     spi_init_struct.nss                  = SPI_NSS_SOFT;
-    spi_init_struct.prescale             = SPI_PSC_8;
+    spi_init_struct.prescale             = SPI_PSC_16;
     spi_init_struct.endian               = SPI_ENDIAN_MSB;
     spi_init(SPI0, &spi_init_struct);
     spi_fifo_access_size_config(SPI0, SPI_BYTE_ACCESS);

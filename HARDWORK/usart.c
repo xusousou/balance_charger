@@ -1,15 +1,13 @@
+/**
+  ******************************************************************************
+  *	文件: usart.c
+  * 描述: 串口
+  ******************************************************************************
+  * @attention
+  ******************************************************************************
+**/
+
 #include "usart.h"
-
-#define USART_RECV_BUF_SIZE 32// 串口接收缓存长度
-#define USART_SEND_BUF_SIZE 32// 串口发送缓存长度
-
-static uint8_t USART_Rx_Buf[USART_RECV_BUF_SIZE];// 用于保存 RX 接收到的数据
-static uint16_t USART_Rx_Len = 0;                // 用于保存 RX 接收到的数据的个数
-static uint16_t USART_Rx_Count = 0;              // 用于保存 RX 接收数据时已经接收到的数据个数
-static uint8_t USART_Tx_Buf[USART_SEND_BUF_SIZE];// 用于保存 Tx 要发送的数据
-static uint16_t USART_Tx_Len = 0;                // 用于保存 Tx 要发送的数据的个数
-static uint16_t USART_Tx_Count = 0;              // 用于保存 Tx 要发送的数据时已经发送的数据个数
-
 
 void USART_Init()
 {

@@ -1,7 +1,7 @@
 /**
   ******************************************************************************
   *	文件: battery.c 
-  * 描述: 
+  * 描述: 电池各状态检测，连接状态，电芯状态
   ******************************************************************************
   * @attention
   ******************************************************************************
@@ -12,6 +12,7 @@
 extern struct Adc adc_values;
 extern uint32_t temperature, vrefintnum;
 extern uint8_t charger_flag;
+extern uint32_t charge_timeout;
 
 volatile struct Battery battery_state;
 static uint8_t cell_connected_bitmask = 0;
@@ -35,7 +36,7 @@ void Read_Cell_Voltage()
     Get_Adc_Val(&vol_bat,&vol_1s,&vol_2s,&vol_3s,&vol_4s);
     get_low_filter(&vol_bat,&vol_1s,&vol_2s,&vol_3s,&vol_4s);
 
-//    adc_values.vrefint =(4096 *1.20/vrefintnum);
+    /*adc_values.vrefint =(4096 *1.20/vrefintnum);*/
     adc_values.vrefint = 3.305;
     adc_values.temperature = ((1450- (temperature *adc_values.vrefint*1000/4096))/(4300/1000))+25;
 
@@ -206,11 +207,12 @@ void Battery_Connection_State()
 
 	Balance_Connection_State();
 	Cell_Voltage_Safety_Check();
-
-	if (Get_Regulator_Charging_State() == 0 || Get_Balancing_State() != 0) {
-		Balance_Battery();
-	}else if(Get_Balancing_State() == 0){
-        Balancing_GPIO_Control(0);
+    if( charge_timeout <= 14400 * 3 ){
+        if (Get_Regulator_Charging_State() == 0 || Get_Balancing_State() != 0) {
+            Balance_Battery();
+        }else if(Get_Balancing_State() == 0){
+            Balancing_GPIO_Control(0);
+        }
     }
 
 	if ((battery_state.xt_connected == CONNECTED) && (battery_state.balance_port_connected == CONNECTED)){

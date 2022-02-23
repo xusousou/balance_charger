@@ -15,6 +15,7 @@ extern float valueBAT,value1S,value2S,value3S,value4S;
 extern uint8_t cell;
 extern struct Adc adc_values;
 extern char KEY1,KEY1_Flag;
+extern uint8_t send_frame[];
 
 uint8_t charger_flag = 1;
 uint32_t charge_timeout = 0;
@@ -51,6 +52,8 @@ int main(void)
     boardInit();
     usart_data_transmit(USART0,0X10); 
     delay_1ms(1000);
+    wwdgt_Init();
+
 
     osThreadDef(read_adc, ADC_Task, osPriorityHigh, 0, 128);
     myTask01Handle = osThreadCreate(osThread(read_adc), NULL);
@@ -61,7 +64,7 @@ int main(void)
     osThreadDef(RGB_LED, Led_Task, osPriorityHigh, 0, 128);
     myTask03Handle = osThreadCreate(osThread(RGB_LED), NULL);
 
-    osThreadDef(NONE_TIME, None_Task, osPriorityNormal, 0, 128);
+    osThreadDef(NONE_TIME, None_Task, osPriorityHigh, 0, 128);
     myTask04Handle = osThreadCreate(osThread(NONE_TIME), NULL);
 
     /* start scheduler */
@@ -109,21 +112,24 @@ void Charger_Task(void const * pvParameters)
         Regulator_Read_ADC();
         timer_count++;
 
-        if(  charger_flag == 0 && charge_timeout < 100000 ){
+        if( charger_flag == 0 && charge_timeout <= 100000 ){
             charge_timeout++;
+        }else if( charger_flag == 1 ){
+            charge_timeout = 0;
         }
 
         if (timer_count < 90 && Get_Balance_Connection_State() == CONNECTED && Get_MCU_Temperature() < TEMP_THROTTLE_THRESH_C) {
             if( Get_XT_Connection_State() == CONNECTED ){
                 Control_Charger_Output(adc_values.cell_voltage[0],cell);
-            }else if( Get_XT_Connection_State() == NOT_CONNECTED ){
-//                Storage_Voltage_Charger(adc_values.cell_voltage[0],cell);
+            }else if( Get_XT_Connection_State() == NOT_CONNECTED){
+
             }
         }else if (timer_count > 100){
             timer_count = 0;
         }else {
             Regulator_HI_Z(1);
         }
+
         vTaskDelay(xDelay);
     }
 }
@@ -164,17 +170,25 @@ void Led_Task(void const * pvParameters)
 
 void None_Task(void const * pvParameters)
 {
-    static int NUM;
+    static uint8_t NUM,cellnum;
     for( ;; ){
         KEY_Scan();
         if(KEY1_Flag)
         {
-            NUM++;
-            if(NUM>=10){
+            if(NUM>=15){
                 NUM=0;
-                printf("%d,%d,%1.3f,%1.3f,%1.3f,%1.3f,%1.3f,%1.3f \r\n",NUM,cell, adc_values.cell_voltage[0],adc_values.cell_voltage[1],adc_values.cell_voltage[2],adc_values.cell_voltage[3],adc_values.cell_voltage[4],adc_values.vrefint);   
-            }
-        }
-        vTaskDelay(10);
+                if(cellnum>4){
+                    cellnum=0;
+                }
+             /*printf("%d,%1.3f,%1.3f,%1.3f,%1.3f,%1.3f,%1.3f \r\n",cell, adc_values.cell_voltage[0],adc_values.cell_voltage[1],adc_values.cell_voltage[2],adc_values.cell_voltage[3],adc_values.cell_voltage[4],adc_values.vrefint);  */
+                if(cellnum==0){
+                    printf("%1.3f@%d",adc_values.cell_voltage[cellnum++],cellnum);
+                }else printf("%1.3f@%d",adc_values.cell_voltage[cellnum++],cellnum);
+                printf("*");
+            }else NUM++;
+        }else   cellnum=0;
+
+        vTaskDelay(25);
+        wwdgt_counter_update(127);
     }
 }

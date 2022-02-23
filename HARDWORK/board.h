@@ -30,7 +30,7 @@
 #include "error.h"
 #include "husb238_iic.h"
 #include "husb238_regulator.h"
-
+#include "wwdgt_1.h"
 
 void boardInit(void);
 

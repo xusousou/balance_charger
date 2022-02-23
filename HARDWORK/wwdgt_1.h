@@ -1,19 +1,20 @@
 /**
   ******************************************************************************
-  * æ–‡ä»¶: usart.h
-  * æè¿°: 
+  *	ÎÄ¼şÃû:   wwdgt_1.h
+  * ÃèÊö£º    
   ******************************************************************************
   * @attention
   ******************************************************************************
 **/
 
-#ifndef __USART_H
-#define __USART_H
+#ifndef __WWDGT_1_H
+#define __WWDGT_1_H
+
+#include "gd32e23x_wwdgt.h"
+#include "gd32e23x_rcu.h"
 #include "board.h"
 
-void USART_Init(void);
+void wwdgt_Init();
 
-//void Usart_SendDate(unsigned char data);
-//void Uart_Sendstrings(char *pt) ;
-void package_frame(const void *data);
+
 #endif

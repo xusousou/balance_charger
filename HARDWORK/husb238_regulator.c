@@ -1,7 +1,16 @@
+/**
+  ******************************************************************************
+  *	文件: husb238_regulator.c
+  * 描述: PD诱骗芯片检测和控制诱骗输出
+  ******************************************************************************
+  * @attention
+  ******************************************************************************
+**/
+
 #include "husb238_regulator.h"
 
 struct Husb238_Regulator PD_regulator;
- 
+extern struct Regulator regulator; 
 
 void Husb238_IIC_Read_Register(uint8_t ReadAddr,uint8_t *data,uint8_t len)	
 {
@@ -206,12 +215,15 @@ void HUSB238_Input_Power()
             PD_regulator.PD_SRC_CURRENT = 5.0;
         break;
     }
+
     if( 1 == Get_HUSB238_Connection() ){
         PD_regulator.PD_INPUT_POWER = PD_regulator.PD_SRC_CURRENT * PD_regulator.PD_SRC_VOLTAGE * 1000;
     }else if( 2 == Get_HUSB238_Connection() ){
         PD_regulator.PD_INPUT_POWER = 30000;
-    }
-    else PD_regulator.PD_INPUT_POWER = NON_USB_PD_CHARGE_POWER;
+    }else if( 0 == Get_HUSB238_Connection() && regulator.vbus_voltage > 550000){
+        PD_regulator.PD_INPUT_POWER = 30000;
+    }else PD_regulator.PD_INPUT_POWER = NON_USB_PD_CHARGE_POWER;
+
 }
 
 /****

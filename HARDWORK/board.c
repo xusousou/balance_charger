@@ -16,11 +16,12 @@ void boardInit()
     i2c_init();
     HUSB238_i2c_init();
     balance_Init();
-    LED_Control(red);
+    LED_Control(green);
     USART_Init();
 
     delay_1ms(1000);
-    LED_Control(green);
+
+    LED_Control(red);
     BQ25703A_init();
 
     delay_1ms(1000);

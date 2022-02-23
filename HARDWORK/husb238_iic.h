@@ -15,6 +15,9 @@
 #define HUSB238_IIC_SDA(n)   (n?gpio_bit_set(GPIOA,GPIO_PIN_12):gpio_bit_reset(GPIOA,GPIO_PIN_12))
 #define HUSB238_READ_SDA     gpio_input_bit_get(GPIOA,GPIO_PIN_12)
 
+#define HUSB238_SDA_IN()  0
+#define HUSB238_SDA_OUT() 0
+
 void HUSB238_i2c_start(void);
 void HUSB238_i2c_stop(void);
 uint8_t HUSB238_i2c_wait_ack(void);

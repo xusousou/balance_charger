@@ -1,11 +1,13 @@
+/**
+  ******************************************************************************
+  *	文件: husb238_iic.c
+  * 描述: PD诱骗芯片IIC初始化
+  ******************************************************************************
+  * @attention
+  ******************************************************************************
+**/
+
 #include "husb238_iic.h"
-
-//SDA配置成OD模式不需要进行输入输出模式切换
-//#define HUSB238_SDA_IN()  {GPIO_CTL(GPIOA)&=0X0FFFFFFF;GPIO_CTL(GPIOA)|=(uint32_t)0<<28;}
-//#define HUSB238_SDA_OUT() {GPIO_CTL(GPIOA)&=0X0FFFFFFF;GPIO_CTL(GPIOA)|=(uint32_t)1<<28;}
-
-#define HUSB238_SDA_IN()  0
-#define HUSB238_SDA_OUT() 0
 
 
 //IIC起始信号

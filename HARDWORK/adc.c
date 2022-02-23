@@ -32,6 +32,7 @@ void adc_init(void)
     gpio_mode_set          (CELL_3S_VOL_PORT, GPIO_MODE_ANALOG, GPIO_PUPD_NONE, CELL_1S_VOL_PIN); 
 	gpio_mode_set          (CELL_4S_VOL_PORT, GPIO_MODE_ANALOG, GPIO_PUPD_NONE, CELL_2S_VOL_PIN); 
 
+	/* DMA 配置 */
     dma_parameter_struct            dma_init_struct;                                    // DMA 初始化参数结构体。
 	rcu_periph_clock_enable        (RCU_DMA);                                           // 使能外设时钟。
 	dma_deinit                     (DMA_CH0);                                           // 复位DMA通道x的所有寄存器。
@@ -76,7 +77,7 @@ void adc_init(void)
 
     delay_1ms(10);
 	adc_enable                        ();                                              // 使能ADC外设
-    delay_1ms(100);                                                                   // 延时非常重要
+    delay_1ms(100);                                                                    // 延时非常重要
 	adc_calibration_enable            ();                                              // ADC校准复位
     delay_1ms(10);
 	adc_dma_mode_enable               ();                                              // ADCx DMA请求使能
@@ -123,7 +124,7 @@ void Get_Adc_Val( uint32_t *bat, uint32_t *s, uint32_t *ss, uint32_t *sss, uint3
 
 /****
     * @函数名     get_low_filter 
-    * @描述       低通滤波函数      
+    * @描述       一阶低通滤波函数      
     * @传入参数   adc采样平均值
     * @传出参数   无
     * @返回值     无
@@ -139,8 +140,7 @@ void get_low_filter(uint32_t *bat, uint32_t *s, uint32_t *ss, uint32_t *sss, uin
     vol2num2 = ( *ss * dPower ) + ( 1 - dPower ) * Lastnum2; 
     vol3num3 = ( *sss * dPower ) + ( 1 - dPower ) * Lastnum3; 
     vol4num4 = ( *ssss * dPower ) + ( 1 - dPower ) * Lastnum4; 
-    Vrefnum      = ( vrefintnum * dPower ) + ( 1 - dPower ) * VrefLastnum; 
-
+    Vrefnum  = ( vrefintnum * dPower ) + ( 1 - dPower ) * VrefLastnum; 
 
     Lastnum0 = BATnum0;    
     Lastnum1 = vol1num1; 

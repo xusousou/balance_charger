@@ -10,6 +10,7 @@
       <TargetName>GD32E230K_START</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
+      <pArmCC>6160000::V6.16::ARMCLANG</pArmCC>
       <pCCUsed>6160000::V6.16::ARMCLANG</pCCUsed>
       <uAC6>1</uAC6>
       <TargetOption>
@@ -138,7 +139,7 @@
           </Flash1>
           <bUseTDR>1</bUseTDR>
           <Flash2>BIN\UL2V8M.DLL</Flash2>
-          <Flash3></Flash3>
+          <Flash3>"" ()</Flash3>
           <Flash4></Flash4>
           <pFcarmOut></pFcarmOut>
           <pFcarmGrp></pFcarmGrp>
@@ -467,6 +468,11 @@
               <FileName>husb238_regulator.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\HARDWORK\husb238_regulator.c</FilePath>
+            </File>
+            <File>
+              <FileName>wwdgt_1.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWORK\wwdgt_1.c</FilePath>
             </File>
           </Files>
         </Group>
